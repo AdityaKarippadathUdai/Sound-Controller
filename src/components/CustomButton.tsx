@@ -31,7 +31,7 @@ export default function CustomButton({
   const getBackgroundColor = () => {
     switch (variant) {
       case "secondary":
-        return colors.surface;
+        return colors.card;
       case "danger":
         return "#ef4444";
       default:

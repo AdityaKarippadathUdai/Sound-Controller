@@ -6,11 +6,13 @@ import React, {
 } from "react";
 import { useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Colors, ThemeType } from "../constants/theme";
 
-export type Theme = "light" | "dark";
+const STORAGE_KEY = "APP_THEME";
 
 interface ThemeContextType {
-  theme: Theme;
+  theme: ThemeType;
+  colors: (typeof Colors)[ThemeType];
   toggleTheme: () => void;
 }
 
@@ -23,34 +25,50 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const systemTheme = useColorScheme(); // device theme
-  const [theme, setTheme] = useState<Theme>("dark");
+  const systemTheme = useColorScheme();
+  const [theme, setTheme] = useState<ThemeType>(
+    systemTheme === "dark" ? "dark" : "light"
+  );
+  const [hasUserTheme, setHasUserTheme] = useState(false);
 
-  // Load saved theme
   useEffect(() => {
     const loadTheme = async () => {
-      const saved = await AsyncStorage.getItem("theme");
+      const saved = await AsyncStorage.getItem(STORAGE_KEY);
       if (saved === "light" || saved === "dark") {
         setTheme(saved);
+        setHasUserTheme(true);
       } else {
-        // fallback to system theme
-        setTheme(systemTheme === "light" ? "light" : "dark");
+        setTheme(systemTheme === "dark" ? "dark" : "light");
+        setHasUserTheme(false);
       }
     };
-    loadTheme();
-  }, []);
 
-  // Save theme
+    loadTheme();
+  }, [systemTheme]);
+
   useEffect(() => {
-    AsyncStorage.setItem("theme", theme);
-  }, [theme]);
+    if (!hasUserTheme) {
+      setTheme(systemTheme === "dark" ? "dark" : "light");
+    }
+  }, [hasUserTheme, systemTheme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    setTheme((prev) => {
+      const nextTheme = prev === "light" ? "dark" : "light";
+      AsyncStorage.setItem(STORAGE_KEY, nextTheme);
+      return nextTheme;
+    });
+    setHasUserTheme(true);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        colors: Colors[theme],
+        toggleTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
