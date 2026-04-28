@@ -14,6 +14,12 @@
       "permissions": [
         "ACCESS_NOTIFICATION_POLICY"
       ]
-    }
+    },
+    "ios": {
+      "bundleIdentifier": "com.aditya.silentmode"
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
