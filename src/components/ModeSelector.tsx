@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { PhoneMode } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
-// Replace lucide-react with react-native-vector-icons or expo icons
 import { Ionicons } from "@expo/vector-icons";
 
 interface ModeSelectorProps {
@@ -14,6 +14,8 @@ export default function ModeSelector({
   value,
   onChange,
 }: ModeSelectorProps) {
+  const { colors } = useTheme();
+
   const modes = [
     {
       id: PhoneMode.SILENT,
@@ -33,7 +35,16 @@ export default function ModeSelector({
   ];
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: colors.textPrimary,
+        },
+      ]}
+    >
       {modes.map((mode) => {
         const isActive = value === mode.id;
 
@@ -43,20 +54,28 @@ export default function ModeSelector({
             onPress={() => onChange(mode.id)}
             style={[
               styles.button,
-              isActive ? styles.activeButton : styles.inactiveButton,
+              isActive && { backgroundColor: colors.primary },
             ]}
           >
             <Ionicons
               name={mode.icon as any}
               size={16}
-              color={isActive ? "#fff" : "#94A3B8"}
+              color={
+                isActive
+                  ? colors.textOnPrimary
+                  : colors.textSecondary
+              }
               style={{ marginBottom: 4 }}
             />
 
             <Text
               style={[
                 styles.text,
-                isActive ? styles.activeText : styles.inactiveText,
+                {
+                  color: isActive
+                    ? colors.textOnPrimary
+                    : colors.textSecondary,
+                },
               ]}
             >
               {mode.label}
@@ -71,11 +90,13 @@ export default function ModeSelector({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#111827", // dark surface
     padding: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#1F2937",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   button: {
     flex: 1,
@@ -84,20 +105,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  activeButton: {
-    backgroundColor: "#1E90FF", // primary blue
-  },
-  inactiveButton: {
-    backgroundColor: "transparent",
-  },
   text: {
     fontSize: 12,
     fontWeight: "600",
-  },
-  activeText: {
-    color: "#FFFFFF",
-  },
-  inactiveText: {
-    color: "#94A3B8",
   },
 });

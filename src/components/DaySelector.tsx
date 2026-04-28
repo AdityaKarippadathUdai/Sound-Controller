@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 export type Day = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
@@ -14,6 +15,8 @@ export default function DaySelector({
   selectedDays,
   onChange,
 }: DaySelectorProps) {
+  const { colors } = useTheme();
+
   const toggleDay = (day: Day) => {
     if (selectedDays.includes(day)) {
       onChange(selectedDays.filter((d) => d !== day));
@@ -33,13 +36,25 @@ export default function DaySelector({
             onPress={() => toggleDay(day)}
             style={[
               styles.button,
-              isSelected ? styles.selected : styles.unselected,
+              {
+                backgroundColor: isSelected
+                  ? colors.primary
+                  : colors.card,
+                borderColor: isSelected
+                  ? colors.primary
+                  : colors.border,
+              },
+              isSelected && styles.selected,
             ]}
           >
             <Text
               style={[
                 styles.text,
-                isSelected ? styles.selectedText : styles.unselectedText,
+                {
+                  color: isSelected
+                    ? colors.textOnPrimary
+                    : colors.textSecondary,
+                },
               ]}
             >
               {day.charAt(0)}
@@ -66,22 +81,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   selected: {
-    backgroundColor: "#1E90FF", // primary (blue for dark theme)
-    borderColor: "#1E90FF",
     transform: [{ scale: 1.05 }],
-  },
-  unselected: {
-    backgroundColor: "transparent",
-    borderColor: "#334155", // slate-700
   },
   text: {
     fontSize: 12,
     fontWeight: "600",
-  },
-  selectedText: {
-    color: "#FFFFFF",
-  },
-  unselectedText: {
-    color: "#94A3B8", // slate-400
   },
 });

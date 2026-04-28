@@ -8,25 +8,13 @@ import {
 } from "react-native";
 import { Schedule, PhoneMode } from "../types";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 interface ScheduleCardProps {
   schedule: Schedule;
   onToggle: (id: string) => void;
   onClick: (id: string) => void;
 }
-
-const getModeColor = (mode: PhoneMode) => {
-  switch (mode) {
-    case PhoneMode.SILENT:
-      return "#60A5FA"; // blue
-    case PhoneMode.VIBRATE:
-      return "#F59E0B"; // orange
-    case PhoneMode.NORMAL:
-      return "#22C55E"; // green
-    default:
-      return "#fff";
-  }
-};
 
 const getIcon = (mode: PhoneMode) => {
   switch (mode) {
@@ -46,25 +34,55 @@ export default function ScheduleCard({
   onToggle,
   onClick,
 }: ScheduleCardProps) {
-  const modeColor = getModeColor(schedule.mode);
+  const { colors } = useTheme();
 
   return (
     <Pressable
       onPress={() => onClick(schedule.id)}
       style={({ pressed }) => [
         styles.card,
-        schedule.isEnabled ? styles.enabled : styles.disabled,
+        {
+          backgroundColor: schedule.isEnabled
+            ? colors.surface
+            : colors.card,
+          borderColor: schedule.isEnabled
+            ? colors.primary
+            : colors.border,
+          shadowColor: colors.textPrimary,
+        },
+        !schedule.isEnabled && styles.disabled,
         pressed && { transform: [{ scale: 0.98 }] },
       ]}
     >
       {/* Top Section */}
       <View style={styles.topRow}>
         <View>
-          <Text style={[styles.modeText, { color: modeColor }]}>
-            {schedule.mode}
-          </Text>
+          <View style={styles.modeRow}>
+            <Ionicons
+              name={getIcon(schedule.mode)}
+              size={14}
+              color={
+                schedule.isEnabled
+                  ? colors.primary
+                  : colors.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.modeText,
+                { color: colors.textSecondary },
+              ]}
+            >
+              {schedule.mode}
+            </Text>
+          </View>
 
-          <Text style={styles.timeText}>
+          <Text
+            style={[
+              styles.timeText,
+              { color: colors.textPrimary },
+            ]}
+          >
             {schedule.startTime} – {schedule.endTime}
           </Text>
         </View>
@@ -73,6 +91,13 @@ export default function ScheduleCard({
         <Switch
           value={schedule.isEnabled}
           onValueChange={() => onToggle(schedule.id)}
+          trackColor={{
+            false: colors.border,
+            true: colors.accent,
+          }}
+          thumbColor={
+            schedule.isEnabled ? colors.primary : colors.card
+          }
         />
       </View>
 
@@ -90,17 +115,24 @@ export default function ScheduleCard({
                   key={index}
                   style={[
                     styles.dayCircle,
-                    isActive
-                      ? styles.activeDay
-                      : styles.inactiveDay,
+                    {
+                      backgroundColor: isActive
+                        ? colors.accent
+                        : colors.card,
+                      borderColor: isActive
+                        ? colors.primary
+                        : colors.border,
+                    },
                   ]}
                 >
                   <Text
                     style={[
                       styles.dayText,
-                      isActive
-                        ? styles.activeDayText
-                        : styles.inactiveDayText,
+                      {
+                        color: isActive
+                          ? colors.primary
+                          : colors.textSecondary,
+                      },
                     ]}
                   >
                     {short}
@@ -115,7 +147,7 @@ export default function ScheduleCard({
         <Ionicons
           name="chevron-forward"
           size={16}
-          color="#64748B"
+          color={colors.textSecondary}
         />
       </View>
     </Pressable>
@@ -128,14 +160,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-  },
-  enabled: {
-    backgroundColor: "#111827",
-    borderColor: "#1E3A8A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
   },
   disabled: {
-    backgroundColor: "transparent",
-    borderColor: "#1F2937",
     opacity: 0.6,
   },
   topRow: {
@@ -143,6 +173,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+  },
+  modeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
   },
   modeText: {
     fontSize: 10,
@@ -153,7 +189,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   bottomRow: {
     flexDirection: "row",
@@ -170,21 +205,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-  },
-  activeDay: {
-    backgroundColor: "#1E90FF20",
-  },
-  inactiveDay: {
-    backgroundColor: "#1F2937",
+    borderWidth: 1,
   },
   dayText: {
     fontSize: 10,
     fontWeight: "500",
-  },
-  activeDayText: {
-    color: "#1E90FF",
-  },
-  inactiveDayText: {
-    color: "#94A3B8",
   },
 });

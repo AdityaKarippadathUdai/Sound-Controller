@@ -27,14 +27,13 @@ export default function HomeScreen({
   onAdd,
   onNavigateToSettings,
 }: HomeScreenProps) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { colors } = useTheme();
 
   return (
     <View
       style={[
         styles.container,
-        { backgroundColor: isDark ? "#0B0F1A" : "#FFFFFF" },
+        { backgroundColor: colors.background },
       ]}
     >
       {/* Header */}
@@ -42,7 +41,7 @@ export default function HomeScreen({
         <Text
           style={[
             styles.title,
-            { color: isDark ? "#fff" : "#111827" },
+            { color: colors.textPrimary },
           ]}
         >
           My Sound Setting
@@ -52,10 +51,18 @@ export default function HomeScreen({
           onPress={onNavigateToSettings}
           style={({ pressed }) => [
             styles.settingsBtn,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
             pressed && { opacity: 0.7 },
           ]}
         >
-          <Ionicons name="settings-outline" size={18} color="#94A3B8" />
+          <Ionicons
+            name="settings-outline"
+            size={18}
+            color={colors.textSecondary}
+          />
         </Pressable>
       </View>
 
@@ -69,9 +76,14 @@ export default function HomeScreen({
             <Ionicons
               name="notifications-off"
               size={48}
-              color="#64748B"
+              color={colors.textSecondary}
             />
-            <Text style={styles.emptyText}>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: colors.textSecondary },
+              ]}
+            >
               No schedules yet.{"\n"}Tap + to create one.
             </Text>
           </View>
@@ -92,10 +104,20 @@ export default function HomeScreen({
         onPress={onAdd}
         style={({ pressed }) => [
           styles.fab,
+          {
+            backgroundColor: pressed
+              ? colors.primaryDark
+              : colors.primary,
+            shadowColor: colors.textPrimary,
+          },
           pressed && { transform: [{ scale: 0.9 }] },
         ]}
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons
+          name="add"
+          size={28}
+          color={colors.textOnPrimary}
+        />
       </Pressable>
     </View>
   );
@@ -119,8 +141,8 @@ const styles = StyleSheet.create({
   },
   settingsBtn: {
     padding: 10,
-    borderRadius: 20,
-    backgroundColor: "#111827",
+    borderRadius: 16,
+    borderWidth: 1,
   },
   list: {
     padding: 16,
@@ -134,7 +156,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 10,
-    color: "#64748B",
     textAlign: "center",
   },
   fab: {
@@ -144,9 +165,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#1E90FF",
     alignItems: "center",
     justifyContent: "center",
     elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
   },
 });

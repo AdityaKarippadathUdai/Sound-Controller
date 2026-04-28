@@ -17,7 +17,7 @@ interface SettingsScreenProps {
 export default function SettingsScreen({
   onBack,
 }: SettingsScreenProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, colors, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
   const [automationEnabled, setAutomationEnabled] =
@@ -27,19 +27,23 @@ export default function SettingsScreen({
     <View
       style={[
         styles.container,
-        { backgroundColor: isDark ? "#0B0F1A" : "#FFFFFF" },
+        { backgroundColor: colors.background },
       ]}
     >
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={onBack}>
-          <Ionicons name="chevron-back" size={26} color="#fff" />
+          <Ionicons
+            name="chevron-back"
+            size={26}
+            color={colors.textPrimary}
+          />
         </Pressable>
 
         <Text
           style={[
             styles.title,
-            { color: isDark ? "#fff" : "#111827" },
+            { color: colors.textPrimary },
           ]}
         >
           Settings
@@ -49,12 +53,32 @@ export default function SettingsScreen({
       <ScrollView contentContainerStyle={styles.content}>
         {/* Automation */}
         <View style={styles.section}>
-          <View style={styles.row}>
+          <View
+            style={[
+              styles.row,
+              styles.cardRow,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                shadowColor: colors.textPrimary,
+              },
+            ]}
+          >
             <View>
-              <Text style={styles.mainText}>
+              <Text
+                style={[
+                  styles.mainText,
+                  { color: colors.textPrimary },
+                ]}
+              >
                 Background Automation
               </Text>
-              <Text style={styles.subText}>
+              <Text
+                style={[
+                  styles.subText,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Run scheduler in background
               </Text>
             </View>
@@ -62,17 +86,50 @@ export default function SettingsScreen({
             <Switch
               value={automationEnabled}
               onValueChange={setAutomationEnabled}
+              trackColor={{
+                false: colors.border,
+                true: colors.accent,
+              }}
+              thumbColor={
+                automationEnabled ? colors.primary : colors.card
+              }
             />
           </View>
 
-          <View style={styles.permissionCard}>
-            <View style={styles.permissionIcon}>
-              <Text style={{ color: "#22C55E" }}>✓</Text>
+          <View
+            style={[
+              styles.permissionCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                shadowColor: colors.textPrimary,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.permissionIcon,
+                { backgroundColor: colors.accent },
+              ]}
+            >
+              <Text style={{ color: colors.primary }}>✓</Text>
             </View>
 
             <View>
-              <Text style={styles.mainText}>DND Permission</Text>
-              <Text style={styles.subText}>
+              <Text
+                style={[
+                  styles.mainText,
+                  { color: colors.textPrimary },
+                ]}
+              >
+                DND Permission
+              </Text>
+              <Text
+                style={[
+                  styles.subText,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 System permission granted
               </Text>
             </View>
@@ -81,54 +138,139 @@ export default function SettingsScreen({
 
         {/* Appearance */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Appearance</Text>
+          <Text
+            style={[
+              styles.sectionLabel,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Appearance
+          </Text>
 
           <Pressable
             onPress={toggleTheme}
             style={({ pressed }) => [
               styles.row,
+              styles.cardRow,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                shadowColor: colors.textPrimary,
+              },
               pressed && { opacity: 0.6 },
             ]}
           >
-            <View style={styles.row}>
-              <View style={styles.iconBox}>
+            <View style={styles.rowContent}>
+              <View
+                style={[
+                  styles.iconBox,
+                  { backgroundColor: colors.card },
+                ]}
+              >
                 <Ionicons
                   name={
                     isDark ? "moon-outline" : "sunny-outline"
                   }
                   size={20}
-                  color="#94A3B8"
+                  color={colors.textSecondary}
                 />
               </View>
 
-              <Text style={styles.mainText}>
+              <Text
+                style={[
+                  styles.mainText,
+                  { color: colors.textPrimary },
+                ]}
+              >
                 {isDark ? "Dark Mode" : "Light Mode"}
               </Text>
             </View>
 
-            <Switch value={isDark} onValueChange={toggleTheme} />
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{
+                false: colors.border,
+                true: colors.accent,
+              }}
+              thumbColor={isDark ? colors.primary : colors.card}
+            />
           </Pressable>
         </View>
 
         {/* Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Information</Text>
+          <Text
+            style={[
+              styles.sectionLabel,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Information
+          </Text>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.subText}>App Version</Text>
-            <Text style={styles.mainText}>v2.4.0</Text>
+          <View
+            style={[
+              styles.infoRow,
+              {
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.subText,
+                { color: colors.textSecondary },
+              ]}
+            >
+              App Version
+            </Text>
+            <Text
+              style={[
+                styles.mainText,
+                { color: colors.textPrimary },
+              ]}
+            >
+              v2.4.0
+            </Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.subText}>Build Date</Text>
-            <Text style={styles.mainText}>April 2026</Text>
+          <View
+            style={[
+              styles.infoRow,
+              {
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.subText,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Build Date
+            </Text>
+            <Text
+              style={[
+                styles.mainText,
+                { color: colors.textPrimary },
+              ]}
+            >
+              April 2026
+            </Text>
           </View>
         </View>
       </ScrollView>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
+        <Text
+          style={[
+            styles.footerText,
+            { color: colors.textSecondary },
+          ]}
+        >
           SilentMode Scheduler Project
         </Text>
       </View>
@@ -160,7 +302,6 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 10,
-    color: "#94A3B8",
     textTransform: "uppercase",
     fontWeight: "700",
   },
@@ -169,40 +310,55 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  rowContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardRow: {
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   mainText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#fff",
   },
   subText: {
     fontSize: 12,
-    color: "#94A3B8",
   },
   permissionCard: {
     flexDirection: "row",
     gap: 10,
     padding: 12,
     borderRadius: 16,
-    backgroundColor: "#111827",
+    borderWidth: 1,
     alignItems: "center",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   permissionIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#22C55E20",
     alignItems: "center",
     justifyContent: "center",
   },
   iconBox: {
     padding: 10,
     borderRadius: 10,
-    backgroundColor: "#1F2937",
     marginRight: 10,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
   footer: {
     padding: 20,
@@ -210,7 +366,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 10,
-    color: "#64748B",
     textTransform: "uppercase",
   },
 });

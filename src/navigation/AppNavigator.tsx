@@ -6,6 +6,7 @@ import HomeScreen from "../screens/HomeScreen";
 import EditScheduleScreen from "../screens/EditScheduleScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { Schedule } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -16,24 +17,52 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const { theme, colors } = useTheme();
+
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      theme={{
+        dark: theme === "dark",
+        colors: {
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.surface,
+          text: colors.textPrimary,
+          border: colors.border,
+          notification: colors.primary,
+        },
+      }}
+    >
       <Stack.Navigator
         screenOptions={{
-          headerShown: false, // you already built custom headers
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
         }}
       >
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Home" component={HomeScreenWrapper} />
         <Stack.Screen name="Edit" component={EditScreenWrapper} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreenWrapper}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
----
-
-# 🧠 Wrapper for Edit Screen (IMPORTANT)
+function HomeScreenWrapper({ navigation }: any) {
+  return (
+    <HomeScreen
+      schedules={[]}
+      onToggle={() => undefined}
+      onEdit={() => undefined}
+      onAdd={() => navigation.navigate("Edit")}
+      onNavigateToSettings={() => navigation.navigate("Settings")}
+    />
+  );
+}
 
 function EditScreenWrapper({ route, navigation }: any) {
   const { schedule } = route.params || {};
@@ -51,4 +80,8 @@ function EditScreenWrapper({ route, navigation }: any) {
       onCancel={() => navigation.goBack()}
     />
   );
+}
+
+function SettingsScreenWrapper({ navigation }: any) {
+  return <SettingsScreen onBack={() => navigation.goBack()} />;
 }

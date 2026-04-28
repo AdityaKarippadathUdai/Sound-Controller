@@ -30,9 +30,15 @@ export type Theme = "light" | "dark";
 
 export interface ThemeColors {
   background: string;
-  primary: string;
-  secondary: string;
   surface: string;
-  text: string;
-  textDim: string;
+  primary: string;
+  primaryDark: string;
+  accent: string;
+  textPrimary: string;
+  textSecondary: string;
+  textOnPrimary: string;
+  border: string;
+  card: string;
+  success: string;
+  danger: string;
 }

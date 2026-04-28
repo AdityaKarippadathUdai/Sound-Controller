@@ -33,15 +33,15 @@ export default function CustomButton({
       case "secondary":
         return colors.card;
       case "danger":
-        return "#ef4444";
+        return colors.danger;
       default:
         return colors.primary;
     }
   };
 
   const getTextColor = () => {
-    if (variant === "secondary") return colors.text;
-    return "#fff";
+    if (variant === "secondary") return colors.textPrimary;
+    return colors.textOnPrimary;
   };
 
   return (
@@ -50,13 +50,19 @@ export default function CustomButton({
       disabled={loading}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: getBackgroundColor() },
-        pressed && { opacity: 0.7 },
+        {
+          backgroundColor:
+            pressed && variant === "primary"
+              ? colors.primaryDark
+              : getBackgroundColor(),
+          borderColor: colors.border,
+        },
+        pressed && variant !== "primary" && { opacity: 0.7 },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={getTextColor()} />
       ) : (
         <Text
           style={[
@@ -75,7 +81,9 @@ export default function CustomButton({
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
+    minHeight: 48,
     borderRadius: 16,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },

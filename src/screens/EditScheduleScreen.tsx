@@ -13,6 +13,7 @@ import { Schedule, PhoneMode, Day } from "../types";
 import DaySelector from "../components/DaySelector";
 import ModeSelector from "../components/ModeSelector";
 import TimePicker from "../components/TimePicker";
+import { useTheme } from "../context/ThemeContext";
 
 interface EditScheduleScreenProps {
   schedule?: Schedule | null;
@@ -27,6 +28,7 @@ export default function EditScheduleScreen({
   onDelete,
   onCancel,
 }: EditScheduleScreenProps) {
+  const { colors } = useTheme();
   const [startTime, setStartTime] = useState(
     schedule?.startTime || "22:00"
   );
@@ -63,23 +65,41 @@ export default function EditScheduleScreen({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={onCancel}>
-          <Ionicons name="chevron-back" size={26} color="#fff" />
+          <Ionicons
+            name="chevron-back"
+            size={26}
+            color={colors.textPrimary}
+          />
         </Pressable>
 
-        <Text style={styles.title}>
+        <Text
+          style={[
+            styles.title,
+            { color: colors.textPrimary },
+          ]}
+        >
           {schedule ? "Edit Rule" : "Add Rule"}
         </Text>
 
         {schedule ? (
           <Pressable onPress={() => setShowDeleteConfirm(true)}>
-            <Ionicons name="trash" size={20} color="#ef4444" />
+            <Ionicons
+              name="trash"
+              size={20}
+              color={colors.danger}
+            />
           </Pressable>
         ) : (
-          <View style={{ width: 24 }} />
+          <View style={styles.headerSpacer} />
         )}
       </View>
 
@@ -101,13 +121,27 @@ export default function EditScheduleScreen({
 
         {/* Days */}
         <View>
-          <Text style={styles.label}>Repeat On</Text>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Repeat On
+          </Text>
           <DaySelector selectedDays={days} onChange={setDays} />
         </View>
 
         {/* Mode */}
         <View>
-          <Text style={styles.label}>Device Mode</Text>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Device Mode
+          </Text>
           <ModeSelector value={mode} onChange={setMode} />
         </View>
       </ScrollView>
@@ -117,40 +151,99 @@ export default function EditScheduleScreen({
         onPress={handleSave}
         style={({ pressed }) => [
           styles.saveBtn,
-          pressed && { opacity: 0.8 },
+          {
+            backgroundColor: pressed
+              ? colors.primaryDark
+              : colors.primary,
+          },
         ]}
       >
-        <Ionicons name="checkmark" size={18} color="#fff" />
-        <Text style={styles.saveText}>Save Schedule</Text>
+        <Ionicons
+          name="checkmark"
+          size={18}
+          color={colors.textOnPrimary}
+        />
+        <Text
+          style={[
+            styles.saveText,
+            { color: colors.textOnPrimary },
+          ]}
+        >
+          Save Schedule
+        </Text>
       </Pressable>
 
       {/* Delete Modal */}
       <Modal visible={showDeleteConfirm} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
+        <View
+          style={[
+            styles.modalOverlay,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.modal,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                shadowColor: colors.textPrimary,
+              },
+            ]}
+          >
             <Ionicons
               name="warning-outline"
               size={32}
-              color="#ef4444"
+              color={colors.danger}
             />
 
-            <Text style={styles.modalTitle}>Delete Rule?</Text>
-            <Text style={styles.modalText}>
+            <Text
+              style={[
+                styles.modalTitle,
+                { color: colors.textPrimary },
+              ]}
+            >
+              Delete Rule?
+            </Text>
+            <Text
+              style={[
+                styles.modalText,
+                { color: colors.textSecondary },
+              ]}
+            >
               This action cannot be undone.
             </Text>
 
             <Pressable
               onPress={handleDelete}
-              style={styles.deleteBtn}
+              style={({ pressed }) => [
+                styles.deleteBtn,
+                { backgroundColor: colors.danger },
+                pressed && { opacity: 0.8 },
+              ]}
             >
-              <Text style={styles.deleteText}>Delete</Text>
+              <Text
+                style={[
+                  styles.deleteText,
+                  { color: colors.textOnPrimary },
+                ]}
+              >
+                Delete
+              </Text>
             </Pressable>
 
             <Pressable
               onPress={() => setShowDeleteConfirm(false)}
               style={styles.cancelBtn}
             >
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text
+                style={[
+                  styles.cancelText,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Cancel
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -162,7 +255,6 @@ export default function EditScheduleScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0F1A",
   },
   header: {
     flexDirection: "row",
@@ -174,7 +266,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
+  },
+  headerSpacer: {
+    width: 24,
   },
   content: {
     padding: 16,
@@ -186,7 +280,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 10,
-    color: "#94A3B8",
     textTransform: "uppercase",
     marginBottom: 8,
     fontWeight: "700",
@@ -195,41 +288,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1E90FF",
     padding: 16,
     borderRadius: 16,
     margin: 16,
     gap: 6,
+    minHeight: 52,
   },
   saveText: {
-    color: "#fff",
     fontWeight: "700",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
   },
   modal: {
     width: "85%",
-    backgroundColor: "#111827",
     padding: 20,
     borderRadius: 20,
+    borderWidth: 1,
     alignItems: "center",
     gap: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 4,
   },
   modalTitle: {
     fontSize: 18,
-    color: "#fff",
     fontWeight: "700",
   },
   modalText: {
-    color: "#94A3B8",
     textAlign: "center",
   },
   deleteBtn: {
-    backgroundColor: "#ef4444",
     padding: 12,
     borderRadius: 12,
     width: "100%",
@@ -237,7 +329,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   deleteText: {
-    color: "#fff",
     fontWeight: "700",
   },
   cancelBtn: {
@@ -246,6 +337,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelText: {
-    color: "#94A3B8",
+    fontWeight: "600",
   },
 });

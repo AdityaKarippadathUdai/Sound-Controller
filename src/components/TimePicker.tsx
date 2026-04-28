@@ -7,6 +7,7 @@ import {
   Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 interface TimePickerProps {
   value: string; // "HH:MM"
@@ -19,6 +20,7 @@ export default function TimePicker({
   onChange,
   label,
 }: TimePickerProps) {
+  const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [hours, minutes] = value.split(":").map(Number);
 
@@ -53,33 +55,78 @@ export default function TimePicker({
         onPress={() => setIsOpen(true)}
         style={({ pressed }) => [
           styles.trigger,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            shadowColor: colors.textPrimary,
+          },
           pressed && { transform: [{ scale: 0.97 }] },
         ]}
       >
         <View>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={styles.time}>{value}</Text>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.textSecondary },
+            ]}
+          >
+            {label}
+          </Text>
+          <Text
+            style={[
+              styles.time,
+              { color: colors.textPrimary },
+            ]}
+          >
+            {value}
+          </Text>
         </View>
 
-        <Ionicons name="time-outline" size={20} color="#94A3B8" />
+        <Ionicons
+          name="time-outline"
+          size={20}
+          color={colors.textSecondary}
+        />
       </Pressable>
 
       {/* Modal */}
       <Modal visible={isOpen} transparent animationType="fade">
         {/* Backdrop */}
         <Pressable
-          style={styles.backdrop}
+          style={[
+            styles.backdrop,
+            { backgroundColor: colors.textPrimary },
+          ]}
           onPress={() => setIsOpen(false)}
         />
 
         {/* Bottom Sheet */}
-        <View style={styles.sheet}>
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            },
+          ]}
+        >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Select Time</Text>
+            <Text
+              style={[
+                styles.title,
+                { color: colors.textPrimary },
+              ]}
+            >
+              Select Time
+            </Text>
 
             <Pressable onPress={() => setIsOpen(false)}>
-              <Ionicons name="close" size={24} color="#fff" />
+              <Ionicons
+                name="close"
+                size={24}
+                color={colors.textPrimary}
+              />
             </Pressable>
           </View>
 
@@ -88,36 +135,85 @@ export default function TimePicker({
             {/* Hours */}
             <View style={styles.column}>
               <Pressable onPress={() => adjustHours(1)}>
-                <Ionicons name="chevron-up" size={28} color="#94A3B8" />
+                <Ionicons
+                  name="chevron-up"
+                  size={28}
+                  color={colors.textSecondary}
+                />
               </Pressable>
 
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>
+              <View
+                style={[
+                  styles.valueBox,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.valueText,
+                    { color: colors.textPrimary },
+                  ]}
+                >
                   {hours.toString().padStart(2, "0")}
                 </Text>
               </View>
 
               <Pressable onPress={() => adjustHours(-1)}>
-                <Ionicons name="chevron-down" size={28} color="#94A3B8" />
+                <Ionicons
+                  name="chevron-down"
+                  size={28}
+                  color={colors.textSecondary}
+                />
               </Pressable>
             </View>
 
-            <Text style={styles.colon}>:</Text>
+            <Text
+              style={[
+                styles.colon,
+                { color: colors.textSecondary },
+              ]}
+            >
+              :
+            </Text>
 
             {/* Minutes */}
             <View style={styles.column}>
               <Pressable onPress={() => adjustMinutes(1)}>
-                <Ionicons name="chevron-up" size={28} color="#94A3B8" />
+                <Ionicons
+                  name="chevron-up"
+                  size={28}
+                  color={colors.textSecondary}
+                />
               </Pressable>
 
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>
+              <View
+                style={[
+                  styles.valueBox,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.valueText,
+                    { color: colors.textPrimary },
+                  ]}
+                >
                   {minutes.toString().padStart(2, "0")}
                 </Text>
               </View>
 
               <Pressable onPress={() => adjustMinutes(-1)}>
-                <Ionicons name="chevron-down" size={28} color="#94A3B8" />
+                <Ionicons
+                  name="chevron-down"
+                  size={28}
+                  color={colors.textSecondary}
+                />
               </Pressable>
             </View>
           </View>
@@ -127,10 +223,21 @@ export default function TimePicker({
             onPress={() => setIsOpen(false)}
             style={({ pressed }) => [
               styles.confirmBtn,
-              pressed && { opacity: 0.8 },
+              {
+                backgroundColor: pressed
+                  ? colors.primaryDark
+                  : colors.primary,
+              },
             ]}
           >
-            <Text style={styles.confirmText}>Set Time</Text>
+            <Text
+              style={[
+                styles.confirmText,
+                { color: colors.textOnPrimary },
+              ]}
+            >
+              Set Time
+            </Text>
           </Pressable>
         </View>
       </Modal>
@@ -143,32 +250,34 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 16,
     borderRadius: 16,
-    backgroundColor: "#111827",
+    borderWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   label: {
     fontSize: 10,
-    color: "#94A3B8",
     textTransform: "uppercase",
     fontWeight: "700",
   },
   time: {
     fontSize: 22,
-    color: "#fff",
     fontWeight: "700",
   },
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    opacity: 0.5,
   },
   sheet: {
-    backgroundColor: "#0B0F1A",
     padding: 20,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    borderTopWidth: 1,
   },
   header: {
     flexDirection: "row",
@@ -177,7 +286,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    color: "#fff",
     fontWeight: "700",
   },
   timeRow: {
@@ -194,7 +302,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 16,
-    backgroundColor: "#111827",
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 10,
@@ -202,21 +310,19 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#fff",
   },
   colon: {
     fontSize: 28,
-    color: "#94A3B8",
     fontWeight: "700",
   },
   confirmBtn: {
-    backgroundColor: "#1E90FF",
     padding: 16,
     borderRadius: 16,
     alignItems: "center",
+    minHeight: 52,
+    justifyContent: "center",
   },
   confirmText: {
-    color: "#fff",
     fontWeight: "700",
     fontSize: 16,
   },
