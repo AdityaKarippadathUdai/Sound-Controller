@@ -247,7 +247,7 @@ export default function TimePicker({
 
 const styles = StyleSheet.create({
   trigger: {
-    width: "100%",
+    width: "50%",
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
