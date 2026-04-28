@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "SilentMode Scheduler",
+    "slug": "silent-mode-scheduler",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F1A"
+    },
+    "android": {
+      "package": "com.aditya.silentmode",
+      "permissions": [
+        "ACCESS_NOTIFICATION_POLICY"
+      ]
+    }
+  }
+}
