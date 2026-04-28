@@ -1,32 +1,51 @@
 import { NativeModules, Platform } from "react-native";
 import { PhoneMode } from "../types";
 
-const { SoundManager } = NativeModules;
+type SoundMode = "silent" | "vibrate" | "normal";
 
-if (!SoundManager && Platform.OS === "android") {
+type NativeSoundManager = {
+  setMode: (mode: SoundMode) => Promise<void>;
+  setSilent?: () => Promise<void>;
+  setVibrate?: () => Promise<void>;
+  setNormal?: () => Promise<void>;
+};
+
+const nativeSoundManager =
+  NativeModules.SoundManager as NativeSoundManager | undefined;
+
+if (!nativeSoundManager && Platform.OS === "android") {
   console.warn("SoundManager native module not linked!");
 }
 
-const setMode = async (mode: PhoneMode) => {
+const normalizeMode = (mode: PhoneMode | SoundMode): SoundMode => {
+  switch (mode) {
+    case PhoneMode.SILENT:
+    case "silent":
+      return "silent";
+    case PhoneMode.VIBRATE:
+    case "vibrate":
+      return "vibrate";
+    case PhoneMode.NORMAL:
+    case "normal":
+      return "normal";
+    default:
+      return "normal";
+  }
+};
+
+const setMode = async (mode: PhoneMode | SoundMode) => {
   if (Platform.OS !== "android") {
     console.warn("Sound control only works on Android");
     return;
   }
 
+  if (!nativeSoundManager) {
+    console.warn("SoundManager native module is unavailable");
+    return;
+  }
+
   try {
-    switch (mode) {
-      case PhoneMode.SILENT:
-        await SoundManager.setSilent();
-        break;
-      case PhoneMode.VIBRATE:
-        await SoundManager.setVibrate();
-        break;
-      case PhoneMode.NORMAL:
-        await SoundManager.setNormal();
-        break;
-      default:
-        console.warn("Unknown mode:", mode);
-    }
+    await nativeSoundManager.setMode(normalizeMode(mode));
   } catch (error) {
     console.log("Error setting sound mode:", error);
   }

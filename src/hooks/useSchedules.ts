@@ -1,21 +1,26 @@
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback, useEffect, useState } from "react";
 import { Schedule } from "../types";
-
-const STORAGE_KEY = "schedules";
+import {
+  addSchedule as insertSchedule,
+  deleteSchedule as removeSchedule,
+  getSchedules,
+  toggleSchedule as setScheduleEnabled,
+  updateSchedule as saveSchedule,
+} from "../services/database";
 
 export default function useSchedules() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Load schedules
+  const refreshSchedules = useCallback(async () => {
+    const savedSchedules = await getSchedules();
+    setSchedules(savedSchedules);
+  }, []);
+
   useEffect(() => {
     const loadSchedules = async () => {
       try {
-        const saved = await AsyncStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          setSchedules(JSON.parse(saved));
-        }
+        await refreshSchedules();
       } catch (error) {
         console.log("Error loading schedules:", error);
       } finally {
@@ -24,50 +29,38 @@ export default function useSchedules() {
     };
 
     loadSchedules();
-  }, []);
+  }, [refreshSchedules]);
 
-  // 🔹 Save schedules whenever changed
-  useEffect(() => {
-    if (!loading) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(schedules));
-    }
-  }, [schedules, loading]);
-
-  // 🔹 Toggle enable/disable
-  const toggleSchedule = (id: string) => {
-    setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, isEnabled: !s.isEnabled } : s
-      )
-    );
+  const addSchedule = async (schedule: Schedule) => {
+    await insertSchedule(schedule);
+    await refreshSchedules();
   };
 
-  // 🔹 Add new schedule
-  const addSchedule = (schedule: Schedule) => {
-    setSchedules((prev) => [...prev, schedule]);
+  const updateSchedule = async (schedule: Schedule) => {
+    await saveSchedule(schedule);
+    await refreshSchedules();
   };
 
-  // 🔹 Update existing schedule
-  const updateSchedule = (updated: Schedule) => {
-    setSchedules((prev) =>
-      prev.map((s) => (s.id === updated.id ? updated : s))
-    );
+  const deleteSchedule = async (id: string) => {
+    await removeSchedule(id);
+    await refreshSchedules();
   };
 
-  // 🔹 Delete schedule
-  const deleteSchedule = (id: string) => {
-    setSchedules((prev) =>
-      prev.filter((s) => s.id !== id)
-    );
+  const toggleSchedule = async (id: string) => {
+    const schedule = schedules.find((item) => item.id === id);
+    if (!schedule) return;
+
+    await setScheduleEnabled(id, !schedule.isEnabled);
+    await refreshSchedules();
   };
 
   return {
     schedules,
     loading,
-    setSchedules,
-    toggleSchedule,
     addSchedule,
     updateSchedule,
     deleteSchedule,
+    toggleSchedule,
+    refreshSchedules,
   };
 }

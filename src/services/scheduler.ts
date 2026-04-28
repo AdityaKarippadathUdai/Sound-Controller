@@ -1,79 +1,83 @@
-import { Schedule, PhoneMode } from "../types";
+import SoundManager from "../native/SoundManager";
+import { Day, Schedule } from "../types";
+import { getSchedules } from "./database";
 
-/**
- * Convert "HH:mm" → minutes since midnight
- */
-const timeToMinutes = (time: string): number => {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
+let intervalId: ReturnType<typeof setInterval> | null = null;
+let lastAppliedScheduleId: string | null = null;
 
-/**
- * Get current time in minutes
- */
-const getCurrentMinutes = (): number => {
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const getCurrentTime = () => {
   const now = new Date();
-  return now.getHours() * 60 + now.getMinutes();
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
 };
 
-/**
- * Check if today is included in schedule
- */
-const isTodayIncluded = (days: string[]): boolean => {
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-  }); // "Mon", "Tue"...
+const getCurrentDay = () => DAYS[new Date().getDay()];
 
-  return days.includes(today);
-};
-
-/**
- * Check if current time is within schedule
- */
 const isTimeInRange = (
-  start: number,
-  end: number,
-  current: number
-): boolean => {
-  // Normal case: 09:00 → 17:00
-  if (start <= end) {
-    return current >= start && current <= end;
+  currentTime: string,
+  startTime: string,
+  endTime: string
+) => {
+  if (startTime > endTime) {
+    return currentTime >= startTime || currentTime <= endTime;
   }
 
-  // Overnight case: 22:00 → 07:00
-  return current >= start || current <= end;
+  return currentTime >= startTime && currentTime <= endTime;
 };
 
-/**
- * Get active schedule (if any)
- */
-export const getActiveSchedule = (
-  schedules: Schedule[]
-): Schedule | null => {
-  const currentMinutes = getCurrentMinutes();
+const getActiveSchedule = (
+  schedules: Schedule[],
+  currentDay: string,
+  currentTime: string
+) =>
+  schedules.find(
+    (schedule) =>
+      schedule.isEnabled &&
+      schedule.days.includes(currentDay as Day) &&
+      isTimeInRange(
+        currentTime,
+        schedule.startTime,
+        schedule.endTime
+      )
+  ) ?? null;
 
-  for (const schedule of schedules) {
-    if (!schedule.isEnabled) continue;
+export const runSchedulerOnce = async () => {
+  const schedules = await getSchedules();
+  const activeSchedule = getActiveSchedule(
+    schedules,
+    getCurrentDay(),
+    getCurrentTime()
+  );
 
-    if (!isTodayIncluded(schedule.days)) continue;
-
-    const start = timeToMinutes(schedule.startTime);
-    const end = timeToMinutes(schedule.endTime);
-
-    if (isTimeInRange(start, end, currentMinutes)) {
-      return schedule;
-    }
+  if (!activeSchedule) {
+    lastAppliedScheduleId = null;
+    return;
   }
 
-  return null;
+  if (activeSchedule.id === lastAppliedScheduleId) {
+    return;
+  }
+
+  await SoundManager.setMode(activeSchedule.mode);
+  lastAppliedScheduleId = activeSchedule.id;
 };
 
-/**
- * Get current mode based on schedules
- */
-export const getCurrentMode = (
-  schedules: Schedule[]
-): PhoneMode | null => {
-  const active = getActiveSchedule(schedules);
-  return active ? active.mode : null;
+export const startScheduler = () => {
+  if (intervalId) {
+    return intervalId;
+  }
+
+  runSchedulerOnce();
+  intervalId = setInterval(runSchedulerOnce, 30000);
+  return intervalId;
+};
+
+export const stopScheduler = () => {
+  if (!intervalId) return;
+
+  clearInterval(intervalId);
+  intervalId = null;
 };

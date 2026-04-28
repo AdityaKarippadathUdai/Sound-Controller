@@ -17,7 +17,7 @@ import { useTheme } from "../context/ThemeContext";
 
 interface EditScheduleScreenProps {
   schedule?: Schedule | null;
-  onSave: (schedule: Partial<Schedule>) => void;
+  onSave: (schedule: Schedule) => void;
   onDelete?: (id: string) => void;
   onCancel: () => void;
 }
@@ -36,7 +36,7 @@ export default function EditScheduleScreen({
     schedule?.endTime || "07:00"
   );
   const [days, setDays] = useState<Day[]>(
-    schedule?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    schedule?.days || []
   );
   const [mode, setMode] = useState<PhoneMode>(
     schedule?.mode || PhoneMode.SILENT

@@ -1,77 +1,41 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import { ThemeProvider } from "./src/context/ThemeContext";
-import { Schedule, PhoneMode } from "./src/types";
+import useSchedules from "./src/hooks/useSchedules";
+import { startScheduler, stopScheduler } from "./src/services/scheduler";
+import { Schedule } from "./src/types";
 
-import HomeScreen from "./src/screens/HomeScreen";
 import EditScheduleScreen from "./src/screens/EditScheduleScreen";
+import HomeScreen from "./src/screens/HomeScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
-
-const INITIAL_SCHEDULES: Schedule[] = [
-  {
-    id: "1",
-    startTime: "22:00",
-    endTime: "07:00",
-    days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    mode: PhoneMode.SILENT,
-    isEnabled: true,
-  },
-  {
-    id: "2",
-    startTime: "09:00",
-    endTime: "17:00",
-    days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    mode: PhoneMode.VIBRATE,
-    isEnabled: false,
-  },
-];
 
 type AppScreen = "home" | "edit" | "settings";
 
 function AppContent() {
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const {
+    schedules,
+    addSchedule,
+    updateSchedule,
+    deleteSchedule,
+    toggleSchedule,
+  } = useSchedules();
   const [currentScreen, setCurrentScreen] =
     useState<AppScreen>("home");
   const [editingSchedule, setEditingSchedule] =
     useState<Schedule | null>(null);
 
-  // Load schedules
   useEffect(() => {
-    const load = async () => {
-      const saved = await AsyncStorage.getItem("schedules");
-      if (saved) {
-        setSchedules(JSON.parse(saved));
-      } else {
-        setSchedules(INITIAL_SCHEDULES);
-      }
-    };
-    load();
+    startScheduler();
+    return () => stopScheduler();
   }, []);
 
-  // Save schedules
-  useEffect(() => {
-    AsyncStorage.setItem(
-      "schedules",
-      JSON.stringify(schedules)
-    );
-  }, [schedules]);
-
-  const handleToggle = (id: string) => {
-    setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, isEnabled: !s.isEnabled } : s
-      )
-    );
-  };
-
   const handleEdit = (id: string) => {
-    const schedule = schedules.find((s) => s.id === id);
-    if (schedule) {
-      setEditingSchedule(schedule);
-      setCurrentScreen("edit");
-    }
+    const schedule = schedules.find((item) => item.id === id);
+    if (!schedule) return;
+
+    setEditingSchedule(schedule);
+    setCurrentScreen("edit");
   };
 
   const handleAdd = () => {
@@ -79,30 +43,19 @@ function AppContent() {
     setCurrentScreen("edit");
   };
 
-  const handleSave = (newSchedule: Partial<Schedule>) => {
+  const handleSave = async (schedule: Schedule) => {
     if (editingSchedule) {
-      setSchedules((prev) =>
-        prev.map((s) =>
-          s.id === editingSchedule.id
-            ? ({ ...s, ...newSchedule } as Schedule)
-            : s
-        )
-      );
+      await updateSchedule(schedule);
     } else {
-      setSchedules((prev) => [
-        ...prev,
-        newSchedule as Schedule,
-      ]);
+      await addSchedule(schedule);
     }
 
     setCurrentScreen("home");
     setEditingSchedule(null);
   };
 
-  const handleDelete = (id: string) => {
-    setSchedules((prev) =>
-      prev.filter((s) => s.id !== id)
-    );
+  const handleDelete = async (id: string) => {
+    await deleteSchedule(id);
     setCurrentScreen("home");
     setEditingSchedule(null);
   };
@@ -112,7 +65,7 @@ function AppContent() {
       {currentScreen === "home" && (
         <HomeScreen
           schedules={schedules}
-          onToggle={handleToggle}
+          onToggle={toggleSchedule}
           onEdit={handleEdit}
           onAdd={handleAdd}
           onNavigateToSettings={() =>
