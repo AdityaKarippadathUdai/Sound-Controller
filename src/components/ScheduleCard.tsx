@@ -29,6 +29,19 @@ const getIcon = (mode: PhoneMode) => {
   }
 };
 
+const getModeLabel = (mode: PhoneMode) => {
+  switch (mode) {
+    case PhoneMode.SILENT:
+      return "Silent";
+    case PhoneMode.VIBRATE:
+      return "Vibrate";
+    case PhoneMode.NORMAL:
+      return "Normal";
+    default:
+      return mode;
+  }
+};
+
 export default function ScheduleCard({
   schedule,
   onToggle,
@@ -73,7 +86,7 @@ export default function ScheduleCard({
                 { color: colors.textSecondary },
               ]}
             >
-              {schedule.mode}
+              {getModeLabel(schedule.mode)}
             </Text>
           </View>
 

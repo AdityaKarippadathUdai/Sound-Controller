@@ -14,9 +14,11 @@ import DaySelector from "../components/DaySelector";
 import ModeSelector from "../components/ModeSelector";
 import TimePicker from "../components/TimePicker";
 import { useTheme } from "../context/ThemeContext";
+import { checkScheduleConflict } from "../utils/conflictChecker";
 
 interface EditScheduleScreenProps {
   schedule?: Schedule | null;
+  existingSchedules?: Schedule[];
   onSave: (schedule: Schedule) => void;
   onDelete?: (id: string) => void;
   onCancel: () => void;
@@ -24,6 +26,7 @@ interface EditScheduleScreenProps {
 
 export default function EditScheduleScreen({
   schedule,
+  existingSchedules = [],
   onSave,
   onDelete,
   onCancel,
@@ -43,9 +46,10 @@ export default function EditScheduleScreen({
   );
   const [showDeleteConfirm, setShowDeleteConfirm] =
     useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSave = () => {
-    onSave({
+    const nextSchedule: Schedule = {
       id:
         schedule?.id ||
         Math.random().toString(36).substring(2, 9),
@@ -54,7 +58,28 @@ export default function EditScheduleScreen({
       days,
       mode,
       isEnabled: true,
-    });
+      createdAt: schedule?.createdAt ?? Date.now(),
+    };
+
+    if (days.length === 0) {
+      setErrorMessage("Select at least one repeat day.");
+      return;
+    }
+
+    const conflict = checkScheduleConflict(
+      nextSchedule,
+      existingSchedules
+    );
+
+    if (conflict.hasConflict) {
+      setErrorMessage(
+        `This overlaps with ${conflict.conflictingScheduleIds.length} existing schedule.`
+      );
+      return;
+    }
+
+    setErrorMessage("");
+    onSave(nextSchedule);
   };
 
   const handleDelete = () => {
@@ -144,6 +169,27 @@ export default function EditScheduleScreen({
           </Text>
           <ModeSelector value={mode} onChange={setMode} />
         </View>
+
+        {errorMessage ? (
+          <View
+            style={[
+              styles.errorBox,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.danger,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.errorText,
+                { color: colors.danger },
+              ]}
+            >
+              {errorMessage}
+            </Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       {/* Save Button */}
@@ -283,6 +329,15 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 8,
     fontWeight: "700",
+  },
+  errorBox: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  errorText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   saveBtn: {
     flexDirection: "row",

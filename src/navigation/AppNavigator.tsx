@@ -86,6 +86,7 @@ export default function AppNavigator() {
             return (
               <EditScheduleScreen
                 schedule={schedule}
+                existingSchedules={schedules}
                 onSave={async (nextSchedule) => {
                   if (schedule) {
                     await updateSchedule(nextSchedule);

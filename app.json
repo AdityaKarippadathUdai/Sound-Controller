@@ -19,7 +19,8 @@
       "bundleIdentifier": "com.aditya.silentmode"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-sqlite"
     ]
   }
 }

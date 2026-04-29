@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
-import { startScheduler, stopScheduler } from "./src/services/scheduler";
+import BackgroundService from "./src/native/BackgroundService";
 import { Schedule } from "./src/types";
 
 import EditScheduleScreen from "./src/screens/EditScheduleScreen";
@@ -26,8 +26,8 @@ function AppContent() {
     useState<Schedule | null>(null);
 
   useEffect(() => {
-    startScheduler();
-    return () => stopScheduler();
+    BackgroundService.startService();
+    BackgroundService.requestIgnoreBatteryOptimizations();
   }, []);
 
   const handleEdit = (id: string) => {
@@ -83,6 +83,7 @@ function AppContent() {
       {currentScreen === "edit" && (
         <EditScheduleScreen
           schedule={editingSchedule}
+          existingSchedules={schedules}
           onSave={handleSave}
           onDelete={handleDelete}
           onCancel={() => {

@@ -10,9 +10,18 @@ db.execSync(`
     endTime TEXT,
     days TEXT,
     mode TEXT,
-    isEnabled INTEGER
+    isEnabled INTEGER,
+    createdAt INTEGER DEFAULT 0
   );
 `);
+
+try {
+  db.execSync(
+    "ALTER TABLE schedules ADD COLUMN createdAt INTEGER DEFAULT 0;"
+  );
+} catch {
+  // Existing databases already have the column.
+}
 
 type ScheduleRow = {
   id: string;
@@ -21,6 +30,14 @@ type ScheduleRow = {
   days: string;
   mode: PhoneMode;
   isEnabled: number;
+  createdAt: number | null;
+};
+
+const normalizeMode = (mode: string): PhoneMode => {
+  const value = mode.toLowerCase();
+  if (value.includes("silent")) return PhoneMode.SILENT;
+  if (value.includes("vibrate")) return PhoneMode.VIBRATE;
+  return PhoneMode.NORMAL;
 };
 
 const rowToSchedule = (row: ScheduleRow): Schedule => ({
@@ -28,8 +45,9 @@ const rowToSchedule = (row: ScheduleRow): Schedule => ({
   startTime: row.startTime,
   endTime: row.endTime,
   days: row.days ? (row.days.split(",") as Day[]) : [],
-  mode: row.mode,
+  mode: normalizeMode(row.mode),
   isEnabled: row.isEnabled === 1,
+  createdAt: row.createdAt ?? 0,
 });
 
 const serializeDays = (days: Day[]) => days.join(",");
@@ -37,8 +55,8 @@ const serializeDays = (days: Day[]) => days.join(",");
 export const addSchedule = async (schedule: Schedule) => {
   await db.runAsync(
     `INSERT INTO schedules
-      (id, startTime, endTime, days, mode, isEnabled)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+      (id, startTime, endTime, days, mode, isEnabled, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       schedule.id,
       schedule.startTime,
@@ -46,6 +64,7 @@ export const addSchedule = async (schedule: Schedule) => {
       serializeDays(schedule.days),
       schedule.mode,
       schedule.isEnabled ? 1 : 0,
+      schedule.createdAt ?? Date.now(),
     ]
   );
 };
@@ -60,7 +79,7 @@ export const getSchedules = async (): Promise<Schedule[]> => {
 export const updateSchedule = async (schedule: Schedule) => {
   await db.runAsync(
     `UPDATE schedules
-     SET startTime = ?, endTime = ?, days = ?, mode = ?, isEnabled = ?
+     SET startTime = ?, endTime = ?, days = ?, mode = ?, isEnabled = ?, createdAt = ?
      WHERE id = ?`,
     [
       schedule.startTime,
@@ -68,6 +87,7 @@ export const updateSchedule = async (schedule: Schedule) => {
       serializeDays(schedule.days),
       schedule.mode,
       schedule.isEnabled ? 1 : 0,
+      schedule.createdAt ?? Date.now(),
       schedule.id,
     ]
   );

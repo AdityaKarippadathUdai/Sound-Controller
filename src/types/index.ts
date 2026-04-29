@@ -3,9 +3,9 @@
  */
 
 export enum PhoneMode {
-  SILENT = "Silent",
-  VIBRATE = "Vibrate",
-  NORMAL = "Normal",
+  SILENT = "silent",
+  VIBRATE = "vibrate",
+  NORMAL = "normal",
 }
 
 export type Day =
@@ -24,6 +24,7 @@ export interface Schedule {
   days: Day[];
   mode: PhoneMode;
   isEnabled: boolean;
+  createdAt?: number;
 }
 
 export type Theme = "light" | "dark";
