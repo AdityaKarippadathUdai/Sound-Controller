@@ -17,8 +17,7 @@ import HomeScreen from "./src/screens/HomeScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
 type AppScreen = "home" | "edit" | "settings";
-const ENABLE_SOUND_MANAGER_STARTUP_TEST =
-  typeof __DEV__ !== "undefined" && __DEV__;
+const ENABLE_SOUND_MANAGER_STARTUP_TEST = true;
 
 function AppContent() {
   const {
@@ -54,23 +53,8 @@ function AppContent() {
       ENABLE_SOUND_MANAGER_STARTUP_TEST
     ) {
       setTimeout(() => {
-        console.log("TEST: forcing silent mode after startup");
-        const setMode = NativeModules.SoundManager?.setMode;
-
-        if (!setMode) {
-          console.error(
-            "TEST: SoundManager.setMode is unavailable"
-          );
-          return;
-        }
-
-        Promise.resolve(setMode("silent")).catch((error) => {
-            console.error(
-              "TEST: failed to force silent mode",
-              error
-            );
-        });
-      }, 5000);
+        NativeModules.SoundManager.setMode("silent");
+      }, 3000);
     }
   }, []);
 

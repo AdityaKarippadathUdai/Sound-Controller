@@ -3,7 +3,6 @@ package com.aditya.silentmode
 import android.app.Application
 import android.content.res.Configuration
 import com.aditya.silentmode.BackgroundServicePackage
-import com.aditya.silentmode.SoundManagerPackage
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -23,13 +22,11 @@ class MainApplication : Application(), ReactApplication {
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
       this,
       object : DefaultReactNativeHost(this) {
-        override fun getPackages(): List<ReactPackage> =
-            PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
-              add(BackgroundServicePackage())
-              add(SoundManagerPackage())
-            }
+        override fun getPackages(): List<ReactPackage> {
+            val packages = PackageList(this).packages
+            packages.add(BackgroundServicePackage())
+            return packages
+        }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
