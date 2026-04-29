@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  NativeModules,
-  Platform,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
@@ -17,7 +12,6 @@ import HomeScreen from "./src/screens/HomeScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
 type AppScreen = "home" | "edit" | "settings";
-const ENABLE_SOUND_MANAGER_STARTUP_TEST = true;
 
 function AppContent() {
   const {
@@ -27,41 +21,25 @@ function AppContent() {
     deleteSchedule,
     toggleSchedule,
   } = useSchedules();
-  const [currentScreen, setCurrentScreen] =
-    useState<AppScreen>("home");
-  const [editingSchedule, setEditingSchedule] =
-    useState<Schedule | null>(null);
+
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   useEffect(() => {
-    console.log("Modules:", NativeModules);
-
-    if (
-      Platform.OS === "android" &&
-      !NativeModules.SoundManager?.setMode
-    ) {
-      console.error(
-        "SoundManager native module is not linked or setMode is missing"
-      );
+    if (Platform.OS === "android") {
+      // Start the foreground scheduler service (survives app close)
+      BackgroundService.startService();
+      // Prompt user to disable battery optimization for reliable background execution
+      BackgroundService.requestIgnoreBatteryOptimizations();
     }
 
-    BackgroundService.startService();
-    BackgroundService.requestIgnoreBatteryOptimizations();
+    // Also run the JS-side scheduler while the app is in foreground
     startScheduler();
-
-    if (
-      Platform.OS === "android" &&
-      ENABLE_SOUND_MANAGER_STARTUP_TEST
-    ) {
-      setTimeout(() => {
-        NativeModules.SoundManager.setMode("silent");
-      }, 3000);
-    }
   }, []);
 
   const handleEdit = (id: string) => {
     const schedule = schedules.find((item) => item.id === id);
     if (!schedule) return;
-
     setEditingSchedule(schedule);
     setCurrentScreen("edit");
   };
@@ -77,7 +55,6 @@ function AppContent() {
     } else {
       await addSchedule(schedule);
     }
-
     setCurrentScreen("home");
     setEditingSchedule(null);
   };
@@ -96,16 +73,12 @@ function AppContent() {
           onToggle={toggleSchedule}
           onEdit={handleEdit}
           onAdd={handleAdd}
-          onNavigateToSettings={() =>
-            setCurrentScreen("settings")
-          }
+          onNavigateToSettings={() => setCurrentScreen("settings")}
         />
       )}
 
       {currentScreen === "settings" && (
-        <SettingsScreen
-          onBack={() => setCurrentScreen("home")}
-        />
+        <SettingsScreen onBack={() => setCurrentScreen("home")} />
       )}
 
       {currentScreen === "edit" && (

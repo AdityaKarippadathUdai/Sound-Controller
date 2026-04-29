@@ -1,0 +1,6 @@
+{
+  "name": "sound-manager",
+  "version": "1.0.0",
+  "description": "Local Expo module for controlling Android ringer mode",
+  "main": "build/index.js"
+}

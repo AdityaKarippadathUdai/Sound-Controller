@@ -1,20 +1,19 @@
-import { NativeModules, Platform } from "react-native";
+import { requireNativeModule } from "expo-modules-core";
+import { Platform } from "react-native";
 import { PhoneMode } from "../types";
 
 type SoundMode = "silent" | "vibrate" | "normal";
 
-type NativeSoundManager = {
-  setMode: (mode: SoundMode) => Promise<void>;
-  setSilent?: () => Promise<void>;
-  setVibrate?: () => Promise<void>;
-  setNormal?: () => Promise<void>;
-};
+// requireNativeModule throws if the module is not found —
+// catch it so the JS bundle still loads on non-Android or simulator.
+let _native: { setMode: (mode: string) => void } | null = null;
 
-const nativeSoundManager =
-  NativeModules.SoundManager as NativeSoundManager | undefined;
-
-if (!nativeSoundManager && Platform.OS === "android") {
-  console.warn("SoundManager native module not linked!");
+if (Platform.OS === "android") {
+  try {
+    _native = requireNativeModule("SoundManager");
+  } catch (e) {
+    console.warn("[SoundManager] Native module not available:", e);
+  }
 }
 
 const normalizeMode = (mode: PhoneMode | SoundMode): SoundMode => {
@@ -33,24 +32,22 @@ const normalizeMode = (mode: PhoneMode | SoundMode): SoundMode => {
   }
 };
 
-const setMode = async (mode: PhoneMode | SoundMode) => {
+const setMode = async (mode: PhoneMode | SoundMode): Promise<void> => {
   if (Platform.OS !== "android") {
-    console.warn("Sound control only works on Android");
+    console.warn("[SoundManager] Sound control only works on Android");
     return;
   }
 
-  if (!nativeSoundManager) {
-    console.warn("SoundManager native module is unavailable");
+  if (!_native) {
+    console.warn("[SoundManager] Native module unavailable");
     return;
   }
 
   try {
-    await nativeSoundManager.setMode(normalizeMode(mode));
+    _native.setMode(normalizeMode(mode));
   } catch (error) {
-    console.log("Error setting sound mode:", error);
+    console.error("[SoundManager] setMode error:", error);
   }
 };
 
-export default {
-  setMode,
-};
+export default { setMode };
