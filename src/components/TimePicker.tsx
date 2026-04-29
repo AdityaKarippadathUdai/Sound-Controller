@@ -28,31 +28,64 @@ export default function TimePicker({
   const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [manualInput, setManualInput] = useState(value);
-  const [hours, minutes] = value.split(":").map(Number);
+  
+  const timeParts = manualInput.split(":");
+  const hours = isNaN(parseInt(timeParts[0])) ? 0 : parseInt(timeParts[0]);
+  const minutes = timeParts.length > 1 && !isNaN(parseInt(timeParts[1])) ? parseInt(timeParts[1]) : 0;
+
+  const [kbHeight, setKbHeight] = useState(0);
 
   useEffect(() => {
     setManualInput(value);
   }, [value]);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => setKbHeight(e.endCoordinates.height));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKbHeight(0));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const isValidTime = (input: string) =>
     /^([01]\d|2[0-3]):([0-5]\d)$/.test(input);
 
-  const formatTime = (input: string) => {
-    const digits = input.replace(/\D/g, "").slice(0, 4);
-
-    if (digits.length === 3) {
-      return `0${digits.slice(0, 1)}:${digits.slice(1, 3)}`;
-    }
-
-    if (digits.length >= 4) {
-      return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
-    }
-
-    return digits;
-  };
-
   const handleManualInput = (input: string) => {
-    setManualInput(formatTime(input));
+    // If backspacing, just allow it
+    if (input.length < manualInput.length) {
+      setManualInput(input);
+      return;
+    }
+
+    const digits = input.replace(/\D/g, "").slice(0, 4);
+    if (digits.length === 0) {
+      setManualInput("");
+      return;
+    }
+
+    let formatted = digits;
+    if (digits.length === 1 && parseInt(digits) >= 3) {
+      formatted = `0${digits}:`;
+    } else if (digits.length === 2) {
+      if (parseInt(digits) >= 24) {
+        formatted = `0${digits[0]}:${digits[1]}`;
+      } else {
+        formatted = `${digits}:`;
+      }
+    } else if (digits.length === 3) {
+      formatted = `${digits.slice(0, 2)}:${digits[2]}`;
+    } else if (digits.length === 4) {
+      formatted = `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+    }
+
+    setManualInput(formatted);
+
+    // If valid time is formed, we don't automatically confirm, but we could highlight as valid
   };
 
   const updateTime = (h: number, m: number) => {
@@ -64,7 +97,6 @@ export default function TimePicker({
       .padStart(2, "0");
     const nextValue = `${hh}:${mm}`;
     setManualInput(nextValue);
-    onChange(nextValue);
   };
 
   const adjustHours = (delta: number) => {
@@ -136,19 +168,17 @@ export default function TimePicker({
 
       {/* Modal */}
       <Modal visible={isOpen} transparent animationType="fade">
+        <Pressable
+          style={[
+            styles.backdrop,
+            { backgroundColor: colors.textPrimary },
+          ]}
+          onPress={() => setIsOpen(false)}
+        />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalRoot}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={[styles.modalRoot, { paddingBottom: Platform.OS === "android" ? kbHeight : 0 }]}
         >
-          {/* Backdrop */}
-          <Pressable
-            style={[
-              styles.backdrop,
-              { backgroundColor: colors.textPrimary },
-            ]}
-            onPress={() => setIsOpen(false)}
-          />
-
           <Pressable
             onPress={Keyboard.dismiss}
             style={styles.dismissArea}
@@ -275,13 +305,15 @@ export default function TimePicker({
                   </View>
                 </View>
 
-                <TextInput
-                  value={manualInput}
-                  onChangeText={handleManualInput}
-                  keyboardType="numeric"
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.textSecondary}
-                  maxLength={5}
+                  <TextInput
+                    value={manualInput}
+                    onChangeText={handleManualInput}
+                    keyboardType="numeric"
+                    placeholder="HH:MM"
+                    placeholderTextColor={colors.textSecondary}
+                    maxLength={5}
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
                   style={[
                     styles.manualInput,
                     {
