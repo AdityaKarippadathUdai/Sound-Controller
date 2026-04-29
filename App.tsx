@@ -4,6 +4,7 @@ import { Platform, StyleSheet, View } from "react-native";
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
 import BackgroundService from "./src/native/BackgroundService";
+import SoundManager from "./src/native/SoundManager";
 import { startScheduler } from "./src/services/scheduler";
 import { Schedule } from "./src/types";
 
@@ -27,6 +28,13 @@ function AppContent() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
+      // Check and request DND access
+      SoundManager.hasDndAccess().then((hasAccess) => {
+        if (!hasAccess) {
+          SoundManager.requestDndAccess();
+        }
+      });
+
       // Start the foreground scheduler service (survives app close)
       BackgroundService.startService();
       // Prompt user to disable battery optimization for reliable background execution

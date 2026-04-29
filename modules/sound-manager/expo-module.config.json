@@ -1,4 +1,7 @@
 {
   "name": "SoundManager",
-  "platforms": ["android"]
+  "platforms": ["android"],
+  "android": {
+    "modules": ["com.aditya.soundmanager.SoundManagerModule"]
+  }
 }

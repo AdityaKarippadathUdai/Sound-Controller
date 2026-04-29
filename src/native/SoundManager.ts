@@ -11,6 +11,7 @@ let _native: { setMode: (mode: string) => void } | null = null;
 if (Platform.OS === "android") {
   try {
     _native = requireNativeModule("SoundManager");
+    console.log("[SoundManager] Module loaded explicitly. Available keys:", _native ? Object.keys(_native) : "null");
   } catch (e) {
     console.warn("[SoundManager] Native module not available:", e);
   }
@@ -32,6 +33,24 @@ const normalizeMode = (mode: PhoneMode | SoundMode): SoundMode => {
   }
 };
 
+const hasDndAccess = async (): Promise<boolean> => {
+  if (Platform.OS !== "android" || !_native) return true;
+  try {
+    return _native.hasDndAccess();
+  } catch (e) {
+    return true; // Assume true on old versions or errors
+  }
+};
+
+const requestDndAccess = async (): Promise<void> => {
+  if (Platform.OS !== "android" || !_native) return;
+  try {
+    _native.requestDndAccess();
+  } catch (e) {
+    console.error("[SoundManager] requestDndAccess error:", e);
+  }
+};
+
 const setMode = async (mode: PhoneMode | SoundMode): Promise<void> => {
   if (Platform.OS !== "android") {
     console.warn("[SoundManager] Sound control only works on Android");
@@ -50,4 +69,4 @@ const setMode = async (mode: PhoneMode | SoundMode): Promise<void> => {
   }
 };
 
-export default { setMode };
+export default { setMode, hasDndAccess, requestDndAccess };
