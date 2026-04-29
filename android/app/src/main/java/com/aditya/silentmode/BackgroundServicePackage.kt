@@ -7,7 +7,10 @@ import com.facebook.react.uimanager.ViewManager
 class BackgroundServicePackage : ReactPackage {
 
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(BackgroundServiceModule(reactContext))
+        return listOf(
+            BackgroundServiceModule(reactContext),
+            SoundManagerModule(reactContext)
+        )
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {

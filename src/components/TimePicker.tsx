@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
@@ -22,7 +23,26 @@ export default function TimePicker({
 }: TimePickerProps) {
   const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [manualInput, setManualInput] = useState(value);
   const [hours, minutes] = value.split(":").map(Number);
+
+  useEffect(() => {
+    setManualInput(value);
+  }, [value]);
+
+  const isValidTime = (input: string) =>
+    /^([01]\d|2[0-3]):([0-5]\d)$/.test(input);
+
+  const handleManualInput = (input: string) => {
+    const digits = input.replace(/\D/g, "").slice(0, 4);
+
+    if (digits.length > 2) {
+      setManualInput(`${digits.slice(0, 2)}:${digits.slice(2)}`);
+      return;
+    }
+
+    setManualInput(digits);
+  };
 
   const updateTime = (h: number, m: number) => {
     const hh = Math.max(0, Math.min(23, h))
@@ -31,7 +51,9 @@ export default function TimePicker({
     const mm = Math.max(0, Math.min(59, m))
       .toString()
       .padStart(2, "0");
-    onChange(`${hh}:${mm}`);
+    const nextValue = `${hh}:${mm}`;
+    setManualInput(nextValue);
+    onChange(nextValue);
   };
 
   const adjustHours = (delta: number) => {
@@ -48,11 +70,23 @@ export default function TimePicker({
     updateTime(hours, next);
   };
 
+  const openPicker = () => {
+    setManualInput(value);
+    setIsOpen(true);
+  };
+
+  const confirmTime = () => {
+    if (!isValidTime(manualInput)) return;
+
+    onChange(manualInput);
+    setIsOpen(false);
+  };
+
   return (
     <>
       {/* Trigger Button */}
       <Pressable
-        onPress={() => setIsOpen(true)}
+        onPress={openPicker}
         style={({ pressed }) => [
           styles.trigger,
           {
@@ -218,9 +252,27 @@ export default function TimePicker({
             </View>
           </View>
 
+          <TextInput
+            value={manualInput}
+            onChangeText={handleManualInput}
+            keyboardType="numeric"
+            placeholder="HH:MM"
+            placeholderTextColor={colors.textSecondary}
+            maxLength={5}
+            style={[
+              styles.manualInput,
+              {
+                borderColor: isValidTime(manualInput)
+                  ? colors.border
+                  : colors.danger,
+                color: colors.textPrimary,
+              },
+            ]}
+          />
+
           {/* Confirm Button */}
           <Pressable
-            onPress={() => setIsOpen(false)}
+            onPress={confirmTime}
             style={({ pressed }) => [
               styles.confirmBtn,
               {
@@ -325,5 +377,14 @@ const styles = StyleSheet.create({
   confirmText: {
     fontWeight: "700",
     fontSize: 16,
+  },
+  manualInput: {
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    marginBottom: 20,
+    fontSize: 18,
+    textAlign: "center",
   },
 });

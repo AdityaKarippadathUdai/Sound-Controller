@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
 import BackgroundService from "./src/native/BackgroundService";
+import { startScheduler } from "./src/services/scheduler";
 import { Schedule } from "./src/types";
 
 import EditScheduleScreen from "./src/screens/EditScheduleScreen";
@@ -28,6 +29,7 @@ function AppContent() {
   useEffect(() => {
     BackgroundService.startService();
     BackgroundService.requestIgnoreBatteryOptimizations();
+    startScheduler();
   }, []);
 
   const handleEdit = (id: string) => {
