@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import {
+  NativeModules,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
@@ -12,6 +17,8 @@ import HomeScreen from "./src/screens/HomeScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
 type AppScreen = "home" | "edit" | "settings";
+const ENABLE_SOUND_MANAGER_STARTUP_TEST =
+  typeof __DEV__ !== "undefined" && __DEV__;
 
 function AppContent() {
   const {
@@ -27,9 +34,44 @@ function AppContent() {
     useState<Schedule | null>(null);
 
   useEffect(() => {
+    console.log("Modules:", NativeModules);
+
+    if (
+      Platform.OS === "android" &&
+      !NativeModules.SoundManager?.setMode
+    ) {
+      console.error(
+        "SoundManager native module is not linked or setMode is missing"
+      );
+    }
+
     BackgroundService.startService();
     BackgroundService.requestIgnoreBatteryOptimizations();
     startScheduler();
+
+    if (
+      Platform.OS === "android" &&
+      ENABLE_SOUND_MANAGER_STARTUP_TEST
+    ) {
+      setTimeout(() => {
+        console.log("TEST: forcing silent mode after startup");
+        const setMode = NativeModules.SoundManager?.setMode;
+
+        if (!setMode) {
+          console.error(
+            "TEST: SoundManager.setMode is unavailable"
+          );
+          return;
+        }
+
+        Promise.resolve(setMode("silent")).catch((error) => {
+            console.error(
+              "TEST: failed to force silent mode",
+              error
+            );
+        });
+      }, 5000);
+    }
   }, []);
 
   const handleEdit = (id: string) => {

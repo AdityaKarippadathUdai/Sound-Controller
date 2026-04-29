@@ -6,6 +6,10 @@ import {
   StyleSheet,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
@@ -33,15 +37,22 @@ export default function TimePicker({
   const isValidTime = (input: string) =>
     /^([01]\d|2[0-3]):([0-5]\d)$/.test(input);
 
-  const handleManualInput = (input: string) => {
+  const formatTime = (input: string) => {
     const digits = input.replace(/\D/g, "").slice(0, 4);
 
-    if (digits.length > 2) {
-      setManualInput(`${digits.slice(0, 2)}:${digits.slice(2)}`);
-      return;
+    if (digits.length === 3) {
+      return `0${digits.slice(0, 1)}:${digits.slice(1, 3)}`;
     }
 
-    setManualInput(digits);
+    if (digits.length >= 4) {
+      return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+    }
+
+    return digits;
+  };
+
+  const handleManualInput = (input: string) => {
+    setManualInput(formatTime(input));
   };
 
   const updateTime = (h: number, m: number) => {
@@ -125,173 +136,189 @@ export default function TimePicker({
 
       {/* Modal */}
       <Modal visible={isOpen} transparent animationType="fade">
-        {/* Backdrop */}
-        <Pressable
-          style={[
-            styles.backdrop,
-            { backgroundColor: colors.textPrimary },
-          ]}
-          onPress={() => setIsOpen(false)}
-        />
-
-        {/* Bottom Sheet */}
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors.background,
-              borderColor: colors.border,
-            },
-          ]}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalRoot}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text
-              style={[
-                styles.title,
-                { color: colors.textPrimary },
-              ]}
-            >
-              Select Time
-            </Text>
-
-            <Pressable onPress={() => setIsOpen(false)}>
-              <Ionicons
-                name="close"
-                size={24}
-                color={colors.textPrimary}
-              />
-            </Pressable>
-          </View>
-
-          {/* Time Controls */}
-          <View style={styles.timeRow}>
-            {/* Hours */}
-            <View style={styles.column}>
-              <Pressable onPress={() => adjustHours(1)}>
-                <Ionicons
-                  name="chevron-up"
-                  size={28}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
-
-              <View
-                style={[
-                  styles.valueBox,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.valueText,
-                    { color: colors.textPrimary },
-                  ]}
-                >
-                  {hours.toString().padStart(2, "0")}
-                </Text>
-              </View>
-
-              <Pressable onPress={() => adjustHours(-1)}>
-                <Ionicons
-                  name="chevron-down"
-                  size={28}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
-            </View>
-
-            <Text
-              style={[
-                styles.colon,
-                { color: colors.textSecondary },
-              ]}
-            >
-              :
-            </Text>
-
-            {/* Minutes */}
-            <View style={styles.column}>
-              <Pressable onPress={() => adjustMinutes(1)}>
-                <Ionicons
-                  name="chevron-up"
-                  size={28}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
-
-              <View
-                style={[
-                  styles.valueBox,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.valueText,
-                    { color: colors.textPrimary },
-                  ]}
-                >
-                  {minutes.toString().padStart(2, "0")}
-                </Text>
-              </View>
-
-              <Pressable onPress={() => adjustMinutes(-1)}>
-                <Ionicons
-                  name="chevron-down"
-                  size={28}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          <TextInput
-            value={manualInput}
-            onChangeText={handleManualInput}
-            keyboardType="numeric"
-            placeholder="HH:MM"
-            placeholderTextColor={colors.textSecondary}
-            maxLength={5}
+          {/* Backdrop */}
+          <Pressable
             style={[
-              styles.manualInput,
-              {
-                borderColor: isValidTime(manualInput)
-                  ? colors.border
-                  : colors.danger,
-                color: colors.textPrimary,
-              },
+              styles.backdrop,
+              { backgroundColor: colors.textPrimary },
             ]}
+            onPress={() => setIsOpen(false)}
           />
 
-          {/* Confirm Button */}
           <Pressable
-            onPress={confirmTime}
-            style={({ pressed }) => [
-              styles.confirmBtn,
-              {
-                backgroundColor: pressed
-                  ? colors.primaryDark
-                  : colors.primary,
-              },
-            ]}
+            onPress={Keyboard.dismiss}
+            style={styles.dismissArea}
           >
-            <Text
-              style={[
-                styles.confirmText,
-                { color: colors.textOnPrimary },
-              ]}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollContent}
             >
-              Set Time
-            </Text>
+              {/* Bottom Sheet */}
+              <View
+                style={[
+                  styles.sheet,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                {/* Header */}
+                <View style={styles.header}>
+                  <Text
+                    style={[
+                      styles.title,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
+                    Select Time
+                  </Text>
+
+                  <Pressable onPress={() => setIsOpen(false)}>
+                    <Ionicons
+                      name="close"
+                      size={24}
+                      color={colors.textPrimary}
+                    />
+                  </Pressable>
+                </View>
+
+                {/* Time Controls */}
+                <View style={styles.timeRow}>
+                  {/* Hours */}
+                  <View style={styles.column}>
+                    <Pressable onPress={() => adjustHours(1)}>
+                      <Ionicons
+                        name="chevron-up"
+                        size={28}
+                        color={colors.textSecondary}
+                      />
+                    </Pressable>
+
+                    <View
+                      style={[
+                        styles.valueBox,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.valueText,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
+                        {hours.toString().padStart(2, "0")}
+                      </Text>
+                    </View>
+
+                    <Pressable onPress={() => adjustHours(-1)}>
+                      <Ionicons
+                        name="chevron-down"
+                        size={28}
+                        color={colors.textSecondary}
+                      />
+                    </Pressable>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.colon,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    :
+                  </Text>
+
+                  {/* Minutes */}
+                  <View style={styles.column}>
+                    <Pressable onPress={() => adjustMinutes(1)}>
+                      <Ionicons
+                        name="chevron-up"
+                        size={28}
+                        color={colors.textSecondary}
+                      />
+                    </Pressable>
+
+                    <View
+                      style={[
+                        styles.valueBox,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.valueText,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
+                        {minutes.toString().padStart(2, "0")}
+                      </Text>
+                    </View>
+
+                    <Pressable onPress={() => adjustMinutes(-1)}>
+                      <Ionicons
+                        name="chevron-down"
+                        size={28}
+                        color={colors.textSecondary}
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <TextInput
+                  value={manualInput}
+                  onChangeText={handleManualInput}
+                  keyboardType="numeric"
+                  placeholder="HH:MM"
+                  placeholderTextColor={colors.textSecondary}
+                  maxLength={5}
+                  style={[
+                    styles.manualInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: isValidTime(manualInput)
+                        ? colors.border
+                        : colors.danger,
+                      color: colors.textPrimary,
+                    },
+                  ]}
+                />
+
+                {/* Confirm Button */}
+                <Pressable
+                  onPress={confirmTime}
+                  style={({ pressed }) => [
+                    styles.confirmBtn,
+                    {
+                      backgroundColor: pressed
+                        ? colors.primaryDark
+                        : colors.primary,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.confirmText,
+                      { color: colors.textOnPrimary },
+                    ]}
+                  >
+                    Set Time
+                  </Text>
+                </Pressable>
+              </View>
+            </ScrollView>
           </Pressable>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -321,15 +348,29 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
   },
-  backdrop: {
+  modalRoot: {
     flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
     opacity: 0.5,
+  },
+  dismissArea: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 40,
   },
   sheet: {
     padding: 20,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 1,
+    width: "100%",
   },
   header: {
     flexDirection: "row",
@@ -380,7 +421,7 @@ const styles = StyleSheet.create({
   },
   manualInput: {
     borderWidth: 1,
-    padding: 10,
+    padding: 12,
     borderRadius: 10,
     marginTop: 10,
     marginBottom: 20,

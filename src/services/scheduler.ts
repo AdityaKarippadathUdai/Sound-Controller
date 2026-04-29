@@ -3,11 +3,9 @@ import { Day, Schedule } from "../types";
 import { getSchedules } from "./database";
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
-let forceTestIntervalId: ReturnType<typeof setInterval> | null = null;
 let lastAppliedScheduleId: string | null = null;
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const ENABLE_FORCE_SILENT_TEST = typeof __DEV__ !== "undefined" && __DEV__;
 
 const getCurrentTime = () => {
   const now = new Date();
@@ -117,13 +115,6 @@ export const startScheduler = () => {
   runSchedulerOnce();
   intervalId = setInterval(runSchedulerOnce, 30000);
 
-  if (ENABLE_FORCE_SILENT_TEST && !forceTestIntervalId) {
-    forceTestIntervalId = setInterval(() => {
-      console.log("TEST: forcing silent mode");
-      SoundManager.setMode("silent");
-    }, 10000);
-  }
-
   return intervalId;
 };
 
@@ -132,9 +123,4 @@ export const stopScheduler = () => {
 
   clearInterval(intervalId);
   intervalId = null;
-
-  if (forceTestIntervalId) {
-    clearInterval(forceTestIntervalId);
-    forceTestIntervalId = null;
-  }
 };

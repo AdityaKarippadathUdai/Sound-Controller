@@ -1,7 +1,9 @@
 package com.aditya.silentmode
-import com.aditya.silentmode.BackgroundServicePackage
+
 import android.app.Application
 import android.content.res.Configuration
+import com.aditya.silentmode.BackgroundServicePackage
+import com.aditya.silentmode.SoundManagerPackage
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -25,7 +27,8 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
-              add(BackgroundServicePackage()) // 👈 ADD THIS
+              add(BackgroundServicePackage())
+              add(SoundManagerPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
