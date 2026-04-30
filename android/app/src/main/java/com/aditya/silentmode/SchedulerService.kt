@@ -66,15 +66,39 @@ class SchedulerService : Service() {
 
             Log.d(TAG, "Tick: day=$currentDay minutes=$currentMinutes schedules=${schedules.size}")
 
-            val active = schedules.firstOrNull { s ->
+            val active = schedules.filter { s ->
                 s.isEnabled &&
                 s.days.contains(currentDay) &&
                 isInRange(currentMinutes, s.startMinutes, s.endMinutes)
-            }
+            }.sortedWith(Comparator { a, b ->
+                val daysDiff = a.days.size.compareTo(b.days.size)
+                if (daysDiff != 0) return@Comparator daysDiff
+
+                val createdDiff = b.createdAt.compareTo(a.createdAt)
+                if (createdDiff != 0) return@Comparator createdDiff
+
+                fun modeValue(mode: String) = when (mode.lowercase()) {
+                    "silent" -> 3
+                    "vibrate" -> 2
+                    else -> 1
+                }
+                modeValue(b.mode).compareTo(modeValue(a.mode))
+            }).firstOrNull()
+
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val currentActualMode = am.ringerMode
 
             if (active != null) {
-                Log.i(TAG, "Applying mode=${active.mode} from schedule id=${active.id}")
-                applyMode(active.mode)
+                val expectedMode = when (active.mode.lowercase()) {
+                    "silent" -> if (isDndAccessGranted()) AudioManager.RINGER_MODE_SILENT else AudioManager.RINGER_MODE_VIBRATE
+                    "vibrate" -> AudioManager.RINGER_MODE_VIBRATE
+                    else -> AudioManager.RINGER_MODE_NORMAL
+                }
+
+                if (currentActualMode != expectedMode) {
+                    Log.i(TAG, "Applying mode=${active.mode} from schedule id=${active.id} (External change detected or new schedule)")
+                    applyMode(active.mode)
+                }
                 updateNotification("Active: ${active.mode} (${active.startTime}–${active.endTime})")
             } else {
                 Log.d(TAG, "No active schedule")
@@ -87,10 +111,38 @@ class SchedulerService : Service() {
 
     private fun applyMode(mode: String) {
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        when (mode.lowercase()) {
-            "silent"  -> am.ringerMode = AudioManager.RINGER_MODE_SILENT
-            "vibrate" -> am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-            "normal"  -> am.ringerMode = AudioManager.RINGER_MODE_NORMAL
+        val modeToSet = mode.lowercase()
+        val hasDnd = isDndAccessGranted()
+
+        try {
+            if (modeToSet == "silent" && !hasDnd) {
+                Log.w(TAG, "Silent mode requested but DND access not granted. Falling back to vibrate.")
+                am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+            } else {
+                when (modeToSet) {
+                    "silent"  -> am.ringerMode = AudioManager.RINGER_MODE_SILENT
+                    "vibrate" -> am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                    "normal"  -> am.ringerMode = AudioManager.RINGER_MODE_NORMAL
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied setting mode: ${e.message}")
+            if (modeToSet == "silent") {
+                try {
+                    am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                } catch (e2: Exception) {
+                    Log.e(TAG, "Failed fallback to vibrate: ${e2.message}")
+                }
+            }
+        }
+    }
+
+    private fun isDndAccessGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.isNotificationPolicyAccessGranted
+        } else {
+            true
         }
     }
 
@@ -107,6 +159,7 @@ class SchedulerService : Service() {
         val isEnabled: Boolean,
         val startMinutes: Int,
         val endMinutes: Int,
+        val createdAt: Long,
     )
 
     private fun querySchedules(): List<ScheduleRow> {
@@ -121,20 +174,29 @@ class SchedulerService : Service() {
 
         try {
             val cursor = db.rawQuery(
-                "SELECT id, startTime, endTime, days, mode, isEnabled FROM schedules",
+                "SELECT id, startTime, endTime, days, mode, isEnabled, createdAt FROM schedules",
                 null
             )
             cursor.use {
+                val idIdx = it.getColumnIndex("id")
+                val startIdx = it.getColumnIndex("startTime")
+                val endIdx = it.getColumnIndex("endTime")
+                val daysIdx = it.getColumnIndex("days")
+                val modeIdx = it.getColumnIndex("mode")
+                val enabledIdx = it.getColumnIndex("isEnabled")
+                val createdIdx = it.getColumnIndex("createdAt")
+
                 while (it.moveToNext()) {
-                    val startTime = it.getString(1) ?: continue
-                    val endTime   = it.getString(2) ?: continue
-                    val daysRaw   = it.getString(3) ?: ""
-                    val mode      = it.getString(4) ?: "normal"
-                    val enabled   = it.getInt(5) == 1
+                    val startTime = it.getString(startIdx) ?: continue
+                    val endTime   = it.getString(endIdx) ?: continue
+                    val daysRaw   = it.getString(daysIdx) ?: ""
+                    val mode      = it.getString(modeIdx) ?: "normal"
+                    val enabled   = it.getInt(enabledIdx) == 1
+                    val createdAt = if (createdIdx != -1) it.getLong(createdIdx) else 0L
 
                     result.add(
                         ScheduleRow(
-                            id           = it.getString(0),
+                            id           = it.getString(idIdx),
                             startTime    = startTime,
                             endTime      = endTime,
                             days         = daysRaw.split(",").map(String::trim).filter(String::isNotEmpty),
@@ -142,6 +204,7 @@ class SchedulerService : Service() {
                             isEnabled    = enabled,
                             startMinutes = timeToMinutes(startTime),
                             endMinutes   = timeToMinutes(endTime),
+                            createdAt    = createdAt,
                         )
                     )
                 }

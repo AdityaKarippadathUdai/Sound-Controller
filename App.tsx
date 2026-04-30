@@ -5,7 +5,6 @@ import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
 import BackgroundService from "./src/native/BackgroundService";
 import SoundManager from "./src/native/SoundManager";
-import { startScheduler } from "./src/services/scheduler";
 import { Schedule } from "./src/types";
 
 import EditScheduleScreen from "./src/screens/EditScheduleScreen";
@@ -64,9 +63,6 @@ function AppContent() {
       // Prompt user to disable battery optimization for reliable background execution
       BackgroundService.requestIgnoreBatteryOptimizations();
     }
-
-    // Also run the JS-side scheduler while the app is in foreground
-    startScheduler();
 
     return () => {
       if (appStateSubscription) {
