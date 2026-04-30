@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View, Alert, AppState } from "react-native";
 
 import { ThemeProvider } from "./src/context/ThemeContext";
 import useSchedules from "./src/hooks/useSchedules";
@@ -27,11 +27,35 @@ function AppContent() {
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   useEffect(() => {
-    if (Platform.OS === "android") {
-      // Check and request DND access
-      SoundManager.hasDndAccess().then((hasAccess) => {
+    let appStateSubscription: any;
+
+    const checkAndPromptDndAccess = async () => {
+      if (Platform.OS === "android") {
+        const hasAccess = await SoundManager.hasDndAccess();
         if (!hasAccess) {
-          SoundManager.requestDndAccess();
+          Alert.alert(
+            "Permission Required",
+            "This app needs Do Not Disturb access to change your phone's sound mode to Silent. Please enable it in Settings.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Open Settings",
+                onPress: () => SoundManager.requestDndAccess(),
+              },
+            ]
+          );
+        }
+      }
+    };
+
+    if (Platform.OS === "android") {
+      // Check permission on mount
+      checkAndPromptDndAccess();
+
+      // Listen for app returning to foreground to re-check
+      appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
+        if (nextAppState === "active") {
+          checkAndPromptDndAccess();
         }
       });
 
@@ -43,6 +67,12 @@ function AppContent() {
 
     // Also run the JS-side scheduler while the app is in foreground
     startScheduler();
+
+    return () => {
+      if (appStateSubscription) {
+        appStateSubscription.remove();
+      }
+    };
   }, []);
 
   const handleEdit = (id: string) => {
