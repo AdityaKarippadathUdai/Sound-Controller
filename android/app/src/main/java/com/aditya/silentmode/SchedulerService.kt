@@ -70,15 +70,23 @@ class SchedulerService : Service() {
 
             val active = schedules.filter { s ->
                 val inRange = isInRange(currentMinutes, s.startMinutes, s.endMinutes)
-                Log.v(TAG, "Checking schedule: ${s.id} [${s.startTime}-${s.endTime}] enabled=${s.isEnabled} inRange=$inRange")
-                s.isEnabled && s.days.contains(currentDay) && inRange
+                val dayMatch = s.days.contains(currentDay)
+                
+                Log.v(TAG, "Checking schedule: ${s.id} [${s.startTime}-${s.endTime}] " +
+                    "enabled=${s.isEnabled} dayMatch=$dayMatch inRange=$inRange " +
+                    "(cur=$currentMinutes, start=${s.startMinutes}, end=${s.endMinutes})")
+                
+                s.isEnabled && dayMatch && inRange
             }.sortedWith(Comparator { a, b ->
+                // Priority 1: Specificity (fewer days = more specific)
                 val daysDiff = a.days.size.compareTo(b.days.size)
                 if (daysDiff != 0) return@Comparator daysDiff
 
+                // Priority 2: Recency (newer created = higher priority)
                 val createdDiff = b.createdAt.compareTo(a.createdAt)
                 if (createdDiff != 0) return@Comparator createdDiff
 
+                // Priority 3: Mode strength
                 fun modeValue(mode: String) = when (mode.lowercase()) {
                     "silent" -> 3
                     "vibrate" -> 2
@@ -98,16 +106,21 @@ class SchedulerService : Service() {
                     else -> AudioManager.RINGER_MODE_NORMAL
                 }
 
-                Log.i(TAG, "Active Schedule: ${active.id} [${active.mode}]. Expected System Mode: $expectedMode")
+                Log.i(TAG, "Active Schedule Found: ${active.id} [${active.mode}]. Expected System Mode: $expectedMode")
 
                 if (currentActualMode != expectedMode) {
-                    Log.i(TAG, "STATE MISMATCH: Applying mode=${active.mode}")
+                    Log.i(TAG, "APPLYING MODE: ${active.mode} (Reason: Schedule active)")
                     applyMode(active.mode)
                     Log.d(TAG, "RingerMode after apply: ${am.ringerMode}")
                 }
                 updateNotification("Active: ${active.mode} (${active.startTime}–${active.endTime})")
             } else {
                 Log.d(TAG, "No active schedule found for current time.")
+                // REVERT TO NORMAL if not already normal
+                if (currentActualMode != AudioManager.RINGER_MODE_NORMAL) {
+                    Log.i(TAG, "REVERTING TO NORMAL: No schedule active")
+                    applyMode("normal")
+                }
                 updateNotification("Monitoring schedules…")
             }
             Log.d(TAG, "--- Scheduler Tick End ---")

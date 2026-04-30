@@ -7,6 +7,7 @@ import {
   toggleSchedule as setScheduleEnabled,
   updateSchedule as saveSchedule,
 } from "../services/database";
+import BackgroundService from "../native/BackgroundService";
 
 export default function useSchedules() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -36,17 +37,20 @@ export default function useSchedules() {
     console.log("Saving new schedule:", schedule);
     await insertSchedule(schedule);
     await refreshSchedules();
+    BackgroundService.startService();
   };
 
   const updateSchedule = async (schedule: Schedule) => {
     console.log("Updating schedule:", schedule);
     await saveSchedule(schedule);
     await refreshSchedules();
+    BackgroundService.startService();
   };
 
   const deleteSchedule = async (id: string) => {
     await removeSchedule(id);
     await refreshSchedules();
+    BackgroundService.startService();
   };
 
   const toggleSchedule = async (id: string) => {
@@ -55,6 +59,7 @@ export default function useSchedules() {
 
     await setScheduleEnabled(id, !schedule.isEnabled);
     await refreshSchedules();
+    BackgroundService.startService();
   };
 
   return {
