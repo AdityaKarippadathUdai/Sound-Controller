@@ -4,6 +4,7 @@ type NativeBackgroundService = {
   startService: () => Promise<void>;
   stopService: () => Promise<void>;
   requestIgnoreBatteryOptimizations: () => Promise<void>;
+  isIgnoringBatteryOptimizations: () => Promise<boolean>;
 };
 
 const nativeBackgroundService =
@@ -25,4 +26,10 @@ export default {
   requestIgnoreBatteryOptimizations: () =>
     nativeBackgroundService?.requestIgnoreBatteryOptimizations() ??
     unavailable(),
+  isIgnoringBatteryOptimizations: async () => {
+    if (nativeBackgroundService?.isIgnoringBatteryOptimizations) {
+      return await nativeBackgroundService.isIgnoringBatteryOptimizations();
+    }
+    return false;
+  },
 };

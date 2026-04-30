@@ -9,6 +9,7 @@ import { Schedule } from "./src/types";
 
 import EditScheduleScreen from "./src/screens/EditScheduleScreen";
 import HomeScreen from "./src/screens/HomeScreen";
+import PermissionsScreen from "./src/screens/PermissionsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
 type AppScreen = "home" | "edit" | "settings";
@@ -25,44 +26,43 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
+  const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
+  const [hasDndAccess, setHasDndAccess] = useState(false);
+  const [hasBatteryExemption, setHasBatteryExemption] = useState(false);
+
   useEffect(() => {
     let appStateSubscription: any;
 
-    const checkAndPromptDndAccess = async () => {
+    const checkPermissions = async () => {
       if (Platform.OS === "android") {
-        const hasAccess = await SoundManager.hasDndAccess();
-        if (!hasAccess) {
-          Alert.alert(
-            "Permission Required",
-            "This app needs Do Not Disturb access to change your phone's sound mode to Silent. Please enable it in Settings.",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Open Settings",
-                onPress: () => SoundManager.requestDndAccess(),
-              },
-            ]
-          );
+        const dnd = await SoundManager.hasDndAccess();
+        const battery = await BackgroundService.isIgnoringBatteryOptimizations();
+
+        setHasDndAccess(dnd);
+        setHasBatteryExemption(battery);
+
+        if (dnd && battery) {
+          setPermissionsGranted(true);
+          // Only start service if permissions are fully granted
+          BackgroundService.startService();
+        } else {
+          setPermissionsGranted(false);
         }
+      } else {
+        // iOS or web bypass
+        setPermissionsGranted(true);
       }
     };
 
-    if (Platform.OS === "android") {
-      // Check permission on mount
-      checkAndPromptDndAccess();
+    // Check permission on mount
+    checkPermissions();
 
-      // Listen for app returning to foreground to re-check
-      appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
-        if (nextAppState === "active") {
-          checkAndPromptDndAccess();
-        }
-      });
-
-      // Start the foreground scheduler service (survives app close)
-      BackgroundService.startService();
-      // Prompt user to disable battery optimization for reliable background execution
-      BackgroundService.requestIgnoreBatteryOptimizations();
-    }
+    // Listen for app returning to foreground to re-check
+    appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        checkPermissions();
+      }
+    });
 
     return () => {
       if (appStateSubscription) {
@@ -98,6 +98,25 @@ function AppContent() {
     setCurrentScreen("home");
     setEditingSchedule(null);
   };
+
+  if (permissionsGranted === null) {
+    return <View style={[styles.container, { backgroundColor: "#fff" }]} />;
+  }
+
+  if (!permissionsGranted) {
+    return (
+      <PermissionsScreen
+        hasDndAccess={hasDndAccess}
+        hasBatteryExemption={hasBatteryExemption}
+        onRequestDnd={() => SoundManager.requestDndAccess()}
+        onRequestBattery={() => BackgroundService.requestIgnoreBatteryOptimizations()}
+        onContinue={() => {
+          setPermissionsGranted(true);
+          BackgroundService.startService();
+        }}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>

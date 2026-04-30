@@ -61,4 +61,20 @@ class BackgroundServiceModule(private val reactContext: ReactApplicationContext)
             promise.resolve(null)
         }
     }
+
+    @ReactMethod
+    fun isIgnoringBatteryOptimizations(promise: Promise) {
+        try {
+            val pm = reactContext.getSystemService(android.content.Context.POWER_SERVICE) as PowerManager
+            val packageName = reactContext.packageName
+            val isIgnoring = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pm.isIgnoringBatteryOptimizations(packageName)
+            } else {
+                true
+            }
+            promise.resolve(isIgnoring)
+        } catch (e: Exception) {
+            promise.reject("CHECK_BATTERY_FAILED", e)
+        }
+    }
 }
