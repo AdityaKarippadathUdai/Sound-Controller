@@ -36,7 +36,7 @@ class SchedulerService : Service() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
-        Log.i(TAG, "SchedulerService started")
+        Log.i(TAG, "SchedulerService started - VERSION 2.0 (Native DB Fix)")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -64,12 +64,14 @@ class SchedulerService : Service() {
             val currentDay = getDayAbbr(now.get(Calendar.DAY_OF_WEEK))
             val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
 
-            Log.d(TAG, "Tick: day=$currentDay minutes=$currentMinutes schedules=${schedules.size}")
+            Log.d(TAG, "--- Scheduler Tick Start ---")
+            Log.d(TAG, "Time: $currentDay ${now.get(Calendar.HOUR_OF_DAY)}:${now.get(Calendar.MINUTE)} ($currentMinutes mins)")
+            Log.d(TAG, "Total schedules loaded: ${schedules.size}")
 
             val active = schedules.filter { s ->
-                s.isEnabled &&
-                s.days.contains(currentDay) &&
-                isInRange(currentMinutes, s.startMinutes, s.endMinutes)
+                val inRange = isInRange(currentMinutes, s.startMinutes, s.endMinutes)
+                Log.v(TAG, "Checking schedule: ${s.id} [${s.startTime}-${s.endTime}] enabled=${s.isEnabled} inRange=$inRange")
+                s.isEnabled && s.days.contains(currentDay) && inRange
             }.sortedWith(Comparator { a, b ->
                 val daysDiff = a.days.size.compareTo(b.days.size)
                 if (daysDiff != 0) return@Comparator daysDiff
@@ -87,6 +89,7 @@ class SchedulerService : Service() {
 
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val currentActualMode = am.ringerMode
+            Log.d(TAG, "Current System RingerMode: $currentActualMode")
 
             if (active != null) {
                 val expectedMode = when (active.mode.lowercase()) {
@@ -95,15 +98,19 @@ class SchedulerService : Service() {
                     else -> AudioManager.RINGER_MODE_NORMAL
                 }
 
+                Log.i(TAG, "Active Schedule: ${active.id} [${active.mode}]. Expected System Mode: $expectedMode")
+
                 if (currentActualMode != expectedMode) {
-                    Log.i(TAG, "Applying mode=${active.mode} from schedule id=${active.id} (External change detected or new schedule)")
+                    Log.i(TAG, "STATE MISMATCH: Applying mode=${active.mode}")
                     applyMode(active.mode)
+                    Log.d(TAG, "RingerMode after apply: ${am.ringerMode}")
                 }
                 updateNotification("Active: ${active.mode} (${active.startTime}–${active.endTime})")
             } else {
-                Log.d(TAG, "No active schedule")
+                Log.d(TAG, "No active schedule found for current time.")
                 updateNotification("Monitoring schedules…")
             }
+            Log.d(TAG, "--- Scheduler Tick End ---")
         } catch (e: Exception) {
             Log.e(TAG, "Scheduler tick error", e)
         }
@@ -163,12 +170,25 @@ class SchedulerService : Service() {
     )
 
     private fun querySchedules(): List<ScheduleRow> {
-        val dbPath = getDatabasePath("schedules.db").absolutePath
-        if (!java.io.File(dbPath).exists()) {
-            Log.w(TAG, "DB not found at $dbPath")
-            return emptyList()
+        // Expo-sqlite (next) stores databases in the 'files/SQLite' directory
+        val dbFile = java.io.File(filesDir, "SQLite/schedules.db")
+        val dbPath = dbFile.absolutePath
+        
+        if (!dbFile.exists()) {
+            Log.w(TAG, "DB not found at $dbPath. Trying legacy path...")
+            val legacyDb = getDatabasePath("schedules.db")
+            if (!legacyDb.exists()) {
+                Log.e(TAG, "Database not found in any known location!")
+                return emptyList()
+            }
+            Log.i(TAG, "Found legacy DB at ${legacyDb.absolutePath}")
+            return querySchedulesFromPath(legacyDb.absolutePath)
         }
 
+        return querySchedulesFromPath(dbPath)
+    }
+
+    private fun querySchedulesFromPath(dbPath: String): List<ScheduleRow> {
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
         val result = mutableListOf<ScheduleRow>()
 

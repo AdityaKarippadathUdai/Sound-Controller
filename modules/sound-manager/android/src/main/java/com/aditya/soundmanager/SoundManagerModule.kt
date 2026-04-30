@@ -33,33 +33,38 @@ class SoundManagerModule : Module() {
       val context = appContext.reactContext ?: return@Function false
       val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-      Log.d("SoundManager", "Requested mode: $mode")
+      val ringerModeBefore = audioManager.ringerMode
+      Log.d("SoundManager", "setMode call started. Requested: $mode, Current RingerMode: $ringerModeBefore")
       
       val modeToSet = mode.lowercase()
       val hasDnd = isDndAccessGranted(context)
-      Log.d("SoundManager", "DND access granted: $hasDnd")
+      Log.d("SoundManager", "DND access status: $hasDnd")
 
       try {
         if (modeToSet == "silent" && !hasDnd) {
-          Log.w("SoundManager", "Silent mode requested but DND access not granted. Falling back to vibrate.")
+          Log.w("SoundManager", "Silent mode requested but DND access NOT granted. Falling back to VIBRATE.")
           audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
         } else {
           when (modeToSet) {
             "silent"  -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
             "vibrate" -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
             "normal"  -> audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-            else      -> Log.w("SoundManager", "Unknown mode: $modeToSet")
+            else      -> Log.w("SoundManager", "Unknown mode string: $modeToSet")
           }
         }
-        Log.d("SoundManager", "Current ringer mode after attempt: ${audioManager.ringerMode}")
+        val ringerModeAfter = audioManager.ringerMode
+        Log.d("SoundManager", "Successfully returned from AudioManager. RingerMode now: $ringerModeAfter")
+        if (ringerModeBefore == ringerModeAfter && modeToSet != "normal" && ringerModeBefore != AudioManager.RINGER_MODE_SILENT) {
+           Log.w("SoundManager", "WARNING: Ringer mode did not change after set call!")
+        }
       } catch (e: SecurityException) {
-        Log.e("SoundManager", "Permission denied setting mode: ${e.message}")
+        Log.e("SoundManager", "SecurityException: Permission denied setting mode: ${e.message}")
         if (modeToSet == "silent") {
-           Log.d("SoundManager", "SecurityException caught. Falling back to vibrate.")
+           Log.d("SoundManager", "Falling back to vibrate due to SecurityException")
            try {
              audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
            } catch (e2: Exception) {
-             Log.e("SoundManager", "Failed to fallback to vibrate: ${e2.message}")
+             Log.e("SoundManager", "Emergency fallback to vibrate failed: ${e2.message}")
            }
         }
       }

@@ -6,14 +6,21 @@ type SoundMode = "silent" | "vibrate" | "normal";
 
 // requireNativeModule throws if the module is not found —
 // catch it so the JS bundle still loads on non-Android or simulator.
-let _native: { setMode: (mode: string) => void } | null = null;
+type SoundManagerModule = {
+  setMode: (mode: string) => void;
+  hasDndAccess: () => boolean;
+  requestDndAccess: () => void;
+};
+
+let _native: SoundManagerModule | null = null;
 
 if (Platform.OS === "android") {
   try {
     _native = requireNativeModule("SoundManager");
-    console.log("[SoundManager] Module loaded explicitly. Available keys:", _native ? Object.keys(_native) : "null");
+    console.log("[SoundManager] Native module loaded. Functions:", 
+      _native ? Object.keys(_native).join(", ") : "none");
   } catch (e) {
-    console.warn("[SoundManager] Native module not available:", e);
+    console.error("[SoundManager] Failed to load native module:", e);
   }
 }
 
@@ -63,7 +70,10 @@ const setMode = async (mode: PhoneMode | SoundMode): Promise<void> => {
   }
 
   try {
-    _native.setMode(normalizeMode(mode));
+    const normalized = normalizeMode(mode);
+    console.log(`[SoundManager] Calling native setMode("${normalized}") at ${new Date().toISOString()}`);
+    _native.setMode(normalized);
+    console.log("[SoundManager] Native setMode call returned");
   } catch (error) {
     console.error("[SoundManager] setMode error:", error);
   }

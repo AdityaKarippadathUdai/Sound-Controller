@@ -48,6 +48,28 @@ export default function HomeScreen({
         </Text>
 
         <Pressable
+          onPress={async () => {
+             console.log("[ManualTest] Triggering Silent Mode manually...");
+             await SoundManager.setMode("silent");
+          }}
+          style={({ pressed }) => [
+            styles.settingsBtn,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              marginRight: 8,
+            },
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Ionicons
+            name="volume-mute-outline"
+            size={18}
+            color={colors.primary}
+          />
+        </Pressable>
+
+        <Pressable
           onPress={onNavigateToSettings}
           style={({ pressed }) => [
             styles.settingsBtn,
