@@ -15,7 +15,6 @@ export default function useSchedules() {
 
   const refreshSchedules = useCallback(async () => {
     const savedSchedules = await getSchedules();
-    console.log("Schedules refreshed:", savedSchedules);
     setSchedules(savedSchedules);
   }, []);
 
@@ -24,7 +23,6 @@ export default function useSchedules() {
       try {
         await refreshSchedules();
       } catch (error) {
-        console.log("Error loading schedules:", error);
       } finally {
         setLoading(false);
       }
@@ -34,14 +32,12 @@ export default function useSchedules() {
   }, [refreshSchedules]);
 
   const addSchedule = async (schedule: Schedule) => {
-    console.log("Saving new schedule:", schedule);
     await insertSchedule(schedule);
     await refreshSchedules();
     BackgroundService.startService();
   };
 
   const updateSchedule = async (schedule: Schedule) => {
-    console.log("Updating schedule:", schedule);
     await saveSchedule(schedule);
     await refreshSchedules();
     BackgroundService.startService();

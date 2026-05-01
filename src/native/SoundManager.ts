@@ -17,8 +17,6 @@ let _native: SoundManagerModule | null = null;
 if (Platform.OS === "android") {
   try {
     _native = requireNativeModule("SoundManager");
-    console.log("[SoundManager] Native module loaded. Functions:", 
-      _native ? Object.keys(_native).join(", ") : "none");
   } catch (e) {
     console.error("[SoundManager] Failed to load native module:", e);
   }
@@ -71,9 +69,7 @@ const setMode = async (mode: PhoneMode | SoundMode): Promise<void> => {
 
   try {
     const normalized = normalizeMode(mode);
-    console.log(`[SoundManager] Calling native setMode("${normalized}") at ${new Date().toISOString()}`);
     _native.setMode(normalized);
-    console.log("[SoundManager] Native setMode call returned");
   } catch (error) {
     console.error("[SoundManager] setMode error:", error);
   }

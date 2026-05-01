@@ -74,7 +74,6 @@ export const getSchedules = async (): Promise<Schedule[]> => {
     "SELECT * FROM schedules ORDER BY startTime ASC"
   );
   const schedules = rows.map(rowToSchedule);
-  console.log("DB schedules loaded:", schedules);
   return schedules;
 };
 

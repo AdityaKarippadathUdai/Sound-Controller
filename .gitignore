@@ -2,3 +2,6 @@ node_modules/
 .expo/
 .codex
 android/.kotlin
+*.jks
+*.keystore
+signing.properties
