@@ -9,7 +9,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#0B0F1A"
     },
+    "icon": "./src/assets/Icon.png",
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/Icon.png",
+        "backgroundColor": "#0B0F1A"
+      },
       "package": "com.aditya.silentmode",
       "permissions": [
         "ACCESS_NOTIFICATION_POLICY"

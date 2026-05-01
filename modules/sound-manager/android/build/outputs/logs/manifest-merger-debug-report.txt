@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml:2:13-83
-INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml:2:13-83
+ADDED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml:2:13-83
+INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml:2:13-83
 	package
-		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml
+		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml
 	xmlns:android
-		ADDED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml:2:23-81
+		ADDED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml:2:23-81
 uses-sdk
-INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml reason: use-sdk injection requested
-INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml
-INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml
+INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml reason: use-sdk injection requested
+INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml
+INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml
 	android:targetSdkVersion
-		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml
+		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml
 	android:minSdkVersion
-		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4429030433722703350.xml
+		INJECTED from /home/aditya/Projects/Mern/SilentModeApp/modules/sound-manager/android/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest904138700867200595.xml
