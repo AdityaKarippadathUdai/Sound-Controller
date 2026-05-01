@@ -107,3 +107,4 @@ cd silent-mode-scheduler
 npm install
 npx expo prebuild
 npx expo run:android
+```
